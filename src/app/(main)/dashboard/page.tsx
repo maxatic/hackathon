@@ -1,11 +1,24 @@
-import Link from "next/link";
+"use client";
 
-const stats = [
-  { label: "Master-CV Progress", value: "75%", description: "3 sections remaining" },
-  { label: "Applications", value: "12", description: "4 in progress" },
-  { label: "Interviews", value: "3", description: "Next: Mar 25" },
-  { label: "Success Rate", value: "67%", description: "8 of 12 positive" },
-];
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+type RecentApp = {
+  id: string;
+  company: string;
+  role_title: string;
+  status: string;
+  created_at: string;
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-gray-400/20 text-gray-400",
+  applied: "bg-blue-400/20 text-blue-400",
+  interview: "bg-yellow-400/20 text-yellow-400",
+  offer: "bg-green-400/20 text-green-400",
+  rejected: "bg-red-400/20 text-red-400",
+  withdrawn: "bg-gray-400/20 text-gray-500",
+};
 
 const quickActions = [
   {
@@ -29,48 +42,47 @@ const quickActions = [
       </svg>
     ),
   },
-  {
-    href: "/interview",
-    title: "Practice Interview",
-    description: "Voice-to-voice mock interview with AI feedback.",
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/applications",
-    title: "View Applications",
-    description: "Track all your applications and their status.",
-    icon: (
-      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
-      </svg>
-    ),
-  },
 ];
 
-const recentApplications = [
-  { company: "Amazon", role: "Software Engineer Working Student", status: "Interview", date: "2025-03-01", initial: "A" },
-  { company: "Zalando", role: "Product Manager Intern", status: "Applied", date: "2025-03-08", initial: "Z" },
-  { company: "BMW Group", role: "Data Analyst Werkstudent", status: "In Review", date: "2025-03-14", initial: "B" },
-];
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "yesterday";
+  return `${days}d ago`;
+}
 
 export default function DashboardPage() {
+  const [apps, setApps] = useState<RecentApp[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/applications", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        const all: RecentApp[] = data.applications ?? [];
+        // Filter out the hidden master_cv sentinel
+        const real = all.filter((a) => a.company !== "__master_cv__");
+        setApps(real.slice(0, 3));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <div className="mx-auto max-w-5xl space-y-10">
+    <div className="space-y-10">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-3">
-            <span className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">[01] Overview</span>
-          </div>
           <h1 className="text-3xl font-bold tracking-tight text-[var(--fg)]">
             Welcome back.
           </h1>
           <p className="mt-2 text-[var(--muted)]">
-            Your job search command center. Track progress, generate documents, and prepare for interviews.
+            What would you like to do today?
           </p>
         </div>
         <Link
@@ -84,126 +96,92 @@ export default function DashboardPage() {
         </Link>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 transition-all hover:border-[var(--accent)]/30"
+      {/* Quick Actions */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {quickActions.map((action) => (
+          <Link
+            key={action.href}
+            href={action.href}
+            className={`group relative overflow-hidden rounded-xl border p-5 transition-all duration-300 ${
+              action.accent
+                ? "border-[var(--accent)]/30 bg-[var(--accent-muted)] hover:border-[var(--accent)] hover:shadow-lg hover:shadow-[var(--accent)]/10"
+                : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--accent)]/30"
+            }`}
           >
-            <p className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">{stat.label}</p>
-            <p className="mt-2 text-3xl font-bold text-[var(--accent)]">{stat.value}</p>
-            <p className="mt-1 text-sm text-[var(--muted)]">{stat.description}</p>
-          </div>
+            <div className="flex items-start gap-4">
+              <div className={`rounded-lg p-2.5 ${action.accent ? "bg-[var(--accent)]/20 text-[var(--accent)]" : "bg-[var(--hover)] text-[var(--muted)] group-hover:text-[var(--accent)]"}`}>
+                {action.icon}
+              </div>
+              <div className="flex-1">
+                <h3 className={`font-semibold ${action.accent ? "text-[var(--accent)]" : "text-[var(--fg)]"}`}>
+                  {action.title}
+                </h3>
+                <p className="mt-1 text-sm text-[var(--muted)]">{action.description}</p>
+              </div>
+              <svg
+                className={`h-5 w-5 transition-transform group-hover:translate-x-1 ${action.accent ? "text-[var(--accent)]" : "text-[var(--muted)]"}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </Link>
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div>
-        <div className="mb-4 flex items-center gap-3">
-          <span className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">[02] Quick Actions</span>
-          <div className="h-px flex-1 bg-[var(--border)]" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {quickActions.map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className={`group relative overflow-hidden rounded-xl border p-5 transition-all duration-300 ${
-                action.accent
-                  ? "border-[var(--accent)]/30 bg-[var(--accent-muted)] hover:border-[var(--accent)] hover:shadow-lg hover:shadow-[var(--accent)]/10"
-                  : "border-[var(--border)] bg-[var(--card)] hover:border-[var(--accent)]/30"
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div className={`rounded-lg p-2.5 ${action.accent ? "bg-[var(--accent)]/20 text-[var(--accent)]" : "bg-[var(--hover)] text-[var(--muted)] group-hover:text-[var(--accent)]"}`}>
-                  {action.icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className={`font-semibold ${action.accent ? "text-[var(--accent)]" : "text-[var(--fg)]"}`}>
-                    {action.title}
-                  </h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{action.description}</p>
-                </div>
-                <svg 
-                  className={`h-5 w-5 transition-transform group-hover:translate-x-1 ${action.accent ? "text-[var(--accent)]" : "text-[var(--muted)]"}`} 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor" 
-                  strokeWidth={1.5}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Recent Applications */}
-      <div>
+      <section>
         <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">[03] Recent Applications</span>
-            <div className="h-px w-12 bg-[var(--border)]" />
-          </div>
-          <Link 
-            href="/applications" 
-            className="text-sm font-medium text-[var(--accent)] transition-colors hover:underline"
+          <h2 className="text-lg font-semibold text-[var(--fg)]">Recent Applications</h2>
+          <Link
+            href="/applications"
+            className="text-sm font-medium text-[var(--accent)] hover:underline"
           >
             View all
           </Link>
         </div>
-        <div className="space-y-3">
-          {recentApplications.map((app) => (
-            <div
-              key={app.company + app.role}
-              className="group flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 transition-all hover:border-[var(--accent)]/30"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--accent-muted)] font-semibold text-[var(--accent)]">
-                {app.initial}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-[var(--fg)] truncate">{app.role}</h4>
-                <p className="text-sm text-[var(--muted)]">{app.company} • {app.date}</p>
-              </div>
-              <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                app.status === "Interview" 
-                  ? "bg-[var(--success)]/10 text-[var(--success)]" 
-                  : app.status === "Applied"
-                  ? "bg-[var(--accent-muted)] text-[var(--accent)]"
-                  : "bg-[var(--warning)]/10 text-[var(--warning)]"
-              }`}>
-                {app.status}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Bottom CTA */}
-      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-8 text-center">
-        <h2 className="text-xl font-bold text-[var(--fg)]">
-          The rock doesn&apos;t have to be yours to carry.
-        </h2>
-        <p className="mt-2 text-[var(--muted)]">
-          Let Syz handle the heavy lifting of your job applications.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-          <Link
-            href="/applications/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-2.5 text-sm font-semibold text-[var(--bg)] transition-all hover:opacity-90"
-          >
-            Start Building Your CV
-          </Link>
-          <Link
-            href="/master-cv"
-            className="text-sm font-medium text-[var(--muted)] underline underline-offset-4 transition-colors hover:text-[var(--fg)]"
-          >
-            Complete Your Master-CV
-          </Link>
-        </div>
-      </div>
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--card)]" />
+            ))}
+          </div>
+        ) : apps.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--card)] px-6 py-10 text-center">
+            <p className="text-sm text-[var(--muted)]">
+              No applications yet.{" "}
+              <Link href="/applications/new" className="font-medium text-[var(--accent)] hover:underline">
+                Create your first one
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {apps.map((app) => (
+              <Link
+                key={app.id}
+                href={`/applications/${app.id}`}
+                className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 transition-colors hover:border-[var(--accent)]/30"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-[var(--fg)]">{app.role_title}</p>
+                  <p className="mt-0.5 truncate text-sm text-[var(--muted)]">{app.company}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[app.status] ?? STATUS_COLORS.draft}`}>
+                    {app.status}
+                  </span>
+                  <span className="text-xs text-[var(--muted)]">{timeAgo(app.created_at)}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

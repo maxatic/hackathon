@@ -41,7 +41,21 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ documents: data as GeneratedDocument[] });
+  const docs = data as GeneratedDocument[];
+
+  const signedUrls: Record<string, string> = {};
+  for (const doc of docs) {
+    if (doc.pdf_storage_path) {
+      const { data: urlData } = await supabase.storage
+        .from("generated-pdfs")
+        .createSignedUrl(doc.pdf_storage_path, 3600);
+      if (urlData?.signedUrl) {
+        signedUrls[doc.id] = urlData.signedUrl;
+      }
+    }
+  }
+
+  return NextResponse.json({ documents: docs, signedUrls });
 }
 
 /**
