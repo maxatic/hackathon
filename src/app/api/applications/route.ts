@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { Application, ApplicationLocale, ApplicationStatus } from "@/types/database";
 
 const LOCALES: ApplicationLocale[] = ["de", "en"];
@@ -29,11 +29,11 @@ export async function GET() {
   const auth = await requireUser();
   if (auth.error) return auth.error;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("applications")
     .select("*")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -76,11 +76,11 @@ export async function POST(request: Request) {
   const applied_at =
     typeof body.applied_at === "string" ? body.applied_at : null;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("applications")
     .insert({
-      user_id: auth.user.id,
+      user_id: auth.userId,
       company,
       role_title,
       jd_text,

@@ -20,6 +20,18 @@ export default function HomePage() {
           >
             Open app
           </Link>
+          <Link
+            href="/sign-in"
+            className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className="text-sm font-medium text-[var(--muted)] underline underline-offset-4"
+          >
+            Sign up
+          </Link>
           <a
             href="/api/health"
             className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"

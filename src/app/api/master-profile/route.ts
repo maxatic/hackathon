@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { MasterProfile } from "@/types/database";
 
 export async function GET() {
   const auth = await requireUser();
   if (auth.error) return auth.error;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("master_profiles")
     .select("user_id, profile, updated_at")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .maybeSingle();
 
   if (error) {
@@ -20,7 +20,7 @@ export async function GET() {
 
   if (!data) {
     const empty: MasterProfile = {
-      user_id: auth.user.id,
+      user_id: auth.userId,
       profile: {},
       updated_at: null,
     };
@@ -57,11 +57,11 @@ export async function PUT(request: Request) {
 
   const profile = (body as { profile: Record<string, unknown> }).profile;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("master_profiles")
     .upsert(
-      { user_id: auth.user.id, profile },
+      { user_id: auth.userId, profile },
       { onConflict: "user_id" },
     )
     .select("user_id, profile, updated_at")

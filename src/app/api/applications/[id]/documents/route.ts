@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { DocumentKind, GeneratedDocument } from "@/types/database";
 
 const KINDS: DocumentKind[] = ["cv", "cover_letter", "bundle"];
@@ -13,13 +13,13 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { id: applicationId } = await context.params;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: app, error: appError } = await supabase
     .from("applications")
     .select("id")
     .eq("id", applicationId)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .maybeSingle();
 
   if (appError) {
@@ -34,7 +34,7 @@ export async function GET(_request: Request, context: RouteContext) {
     .from("generated_documents")
     .select("*")
     .eq("application_id", applicationId)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -85,13 +85,13 @@ export async function POST(request: Request, context: RouteContext) {
       ? (body.meta as Record<string, unknown>)
       : {};
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data: app, error: appError } = await supabase
     .from("applications")
     .select("id")
     .eq("id", applicationId)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .maybeSingle();
 
   if (appError) {
@@ -105,7 +105,7 @@ export async function POST(request: Request, context: RouteContext) {
   const { data, error } = await supabase
     .from("generated_documents")
     .insert({
-      user_id: auth.user.id,
+      user_id: auth.userId,
       application_id: applicationId,
       kind,
       latex_source,

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/require-user";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import type { Application, ApplicationLocale, ApplicationStatus } from "@/types/database";
 
 const LOCALES: ApplicationLocale[] = ["de", "en"];
@@ -21,12 +21,12 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { id } = await context.params;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("applications")
     .select("*")
     .eq("id", id)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .maybeSingle();
 
   if (error) {
@@ -87,12 +87,12 @@ export async function PATCH(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("applications")
     .update(patch)
     .eq("id", id)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .select("*")
     .maybeSingle();
 
@@ -113,12 +113,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
   const { id } = await context.params;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("applications")
     .delete()
     .eq("id", id)
-    .eq("user_id", auth.user.id)
+    .eq("user_id", auth.userId)
     .select("id");
 
   if (error) {

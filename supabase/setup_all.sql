@@ -1,3 +1,8 @@
+-- One-shot setup: same as running migrations in order.
+-- Run this in Supabase SQL Editor, or use migrations/ files separately.
+
+-- === Part 1: tables ===
+
 -- Syz core schema: master profile, applications, generated documents
 -- Auth: Clerk (user ids are text, e.g. user_xxx). API uses service role + userId filter.
 
@@ -83,3 +88,19 @@ create trigger master_profiles_set_updated_at
   before update on public.master_profiles
   for each row
   execute procedure public.set_updated_at();
+
+-- === Part 2: storage bucket ===
+
+-- Private bucket for LaTeX-rendered PDFs. Paths: {clerk_user_id}/{application_id}/...
+-- Uploads/downloads use the Supabase service role from the Next.js server only.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'generated-pdfs',
+  'generated-pdfs',
+  false,
+  52428800,
+  array['application/pdf']::text[]
+)
+on conflict (id) do update
+set file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
