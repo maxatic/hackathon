@@ -5,13 +5,13 @@ import { GripVertical, X, AlertCircle, FileText, Mail, Search, Clock, CheckCircl
 
 function BeforePanel() {
   return (
-    <div className="absolute inset-0 bg-neutral-950 overflow-hidden p-6 sm:p-10 flex flex-col gap-5">
+    <div className="absolute inset-0 bg-neutral-50 overflow-hidden p-6 sm:p-10 flex flex-col gap-5">
       <div className="flex items-center gap-2 mb-2">
         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
         <span className="text-[10px] font-mono text-neutral-500 tracking-widest uppercase">Without Syz — Generic job hunt</span>
       </div>
 
-      <div className="border border-neutral-800 rounded-sm p-4 bg-neutral-900/50">
+      <div className="border border-neutral-200 rounded-sm p-4 bg-white">
         <div className="flex items-start gap-3">
           <FileText className="w-4 h-4 text-neutral-600 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -21,7 +21,7 @@ function BeforePanel() {
             </div>
             <div className="space-y-1.5">
               {[92, 68, 54, 62].map((w, i) => (
-                <div key={i} className="h-1.5 rounded-full bg-neutral-800" style={{ width: `${w}%` }} />
+                <div key={i} className="h-1.5 rounded-full bg-neutral-200" style={{ width: `${w}%` }} />
               ))}
             </div>
             <div className="flex items-center gap-1.5 mt-3">
@@ -32,7 +32,7 @@ function BeforePanel() {
         </div>
       </div>
 
-      <div className="border border-neutral-800 rounded-sm p-4 bg-neutral-900/50">
+      <div className="border border-neutral-200 rounded-sm p-4 bg-white">
         <div className="flex items-center gap-2 mb-3">
           <Search className="w-3.5 h-3.5 text-neutral-600" />
           <span className="text-[10px] font-mono text-neutral-500">Spray-and-pray applications</span>
@@ -46,7 +46,7 @@ function BeforePanel() {
             { co: 'Zalando', status: 'Rejected', color: 'text-red-500/70' },
             { co: '...+37', status: 'Unknown', color: 'text-neutral-700' },
           ].map((item, i) => (
-            <div key={i} className="border border-neutral-800 rounded-sm p-2 bg-neutral-950">
+            <div key={i} className="border border-neutral-200 rounded-sm p-2 bg-white">
               <div className="text-[9px] font-mono text-neutral-400 mb-1">{item.co}</div>
               <div className={`text-[8px] font-mono ${item.color}`}>{item.status}</div>
             </div>
@@ -54,7 +54,7 @@ function BeforePanel() {
         </div>
       </div>
 
-      <div className="border border-neutral-800 rounded-sm p-4 bg-neutral-900/50">
+      <div className="border border-neutral-200 rounded-sm p-4 bg-white">
         <div className="flex items-center gap-2 mb-3">
           <Mail className="w-3.5 h-3.5 text-neutral-600" />
           <span className="text-[10px] font-mono text-neutral-500">Cover letter process</span>
@@ -74,7 +74,7 @@ function BeforePanel() {
         </div>
       </div>
 
-      <div className="border border-red-500/10 rounded-sm p-4 bg-red-950/10 mt-auto">
+      <div className="border border-red-200 rounded-sm p-4 bg-red-50 mt-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 text-red-500/50" />
@@ -82,7 +82,7 @@ function BeforePanel() {
           </div>
           <span className="text-[11px] font-mono text-red-500/70 font-bold">~3–4 hours</span>
         </div>
-        <div className="h-1 bg-neutral-800 rounded-full mt-3">
+        <div className="h-1 bg-neutral-200 rounded-full mt-3">
           <div className="h-full w-full bg-red-500/30 rounded-full" />
         </div>
       </div>
@@ -92,13 +92,13 @@ function BeforePanel() {
 
 function AfterPanel() {
   return (
-    <div className="absolute inset-0 bg-neutral-950 overflow-hidden p-6 sm:p-10 flex flex-col gap-5">
+    <div className="absolute inset-0 bg-neutral-50 overflow-hidden p-6 sm:p-10 flex flex-col gap-5">
       <div className="flex items-center gap-2 mb-2">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
         <span className="text-[10px] font-mono text-neutral-500 tracking-widest uppercase">With Syz — Precision job hunt</span>
       </div>
 
-      <div className="border border-neutral-800 rounded-sm p-4 bg-neutral-900/50">
+      <div className="border border-neutral-200 rounded-sm p-4 bg-white">
         <div className="flex items-start gap-3">
           <FileCheck className="w-4 h-4 text-emerald-400/70 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
@@ -108,7 +108,7 @@ function AfterPanel() {
             </div>
             <div className="space-y-1.5">
               {[95, 72, 80, 65].map((w, i) => (
-                <div key={i} className="h-1.5 rounded-full bg-neutral-800 overflow-hidden">
+                <div key={i} className="h-1.5 rounded-full bg-neutral-200 overflow-hidden">
                   <div className="h-full bg-emerald-400/20 rounded-full" style={{ width: `${w}%` }} />
                 </div>
               ))}
@@ -121,7 +121,7 @@ function AfterPanel() {
         </div>
       </div>
 
-      <div className="border border-neutral-800 rounded-sm p-4 bg-neutral-900/50">
+      <div className="border border-neutral-200 rounded-sm p-4 bg-white">
         <div className="flex items-center gap-2 mb-3">
           <Zap className="w-3.5 h-3.5 text-emerald-400/70" />
           <span className="text-[10px] font-mono text-neutral-500">Targeted applications — auto-tracked</span>
@@ -135,7 +135,7 @@ function AfterPanel() {
             { co: 'Zalando', status: 'Offer', color: 'text-yellow-400' },
             { co: 'N26', status: 'Applied', color: 'text-blue-400/70' },
           ].map((item, i) => (
-            <div key={i} className="border border-neutral-800 rounded-sm p-2 bg-neutral-950">
+            <div key={i} className="border border-neutral-200 rounded-sm p-2 bg-white">
               <div className="text-[9px] font-mono text-neutral-400 mb-1">{item.co}</div>
               <div className={`text-[8px] font-mono ${item.color}`}>{item.status}</div>
             </div>
@@ -143,7 +143,7 @@ function AfterPanel() {
         </div>
       </div>
 
-      <div className="border border-neutral-800 rounded-sm p-4 bg-neutral-900/50">
+      <div className="border border-neutral-200 rounded-sm p-4 bg-white">
         <div className="flex items-center gap-2 mb-3">
           <Send className="w-3.5 h-3.5 text-emerald-400/70" />
           <span className="text-[10px] font-mono text-neutral-500">Cover letter — auto-generated</span>
@@ -163,7 +163,7 @@ function AfterPanel() {
         </div>
       </div>
 
-      <div className="border border-emerald-500/10 rounded-sm p-4 bg-emerald-950/10 mt-auto">
+      <div className="border border-emerald-200 rounded-sm p-4 bg-emerald-50 mt-auto">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-3.5 h-3.5 text-emerald-400/50" />
@@ -171,7 +171,7 @@ function AfterPanel() {
           </div>
           <span className="text-[11px] font-mono text-emerald-400/90 font-bold">~4 minutes</span>
         </div>
-        <div className="h-1 bg-neutral-800 rounded-full mt-3">
+        <div className="h-1 bg-neutral-200 rounded-full mt-3">
           <div className="h-full bg-emerald-400/50 rounded-full" style={{ width: '8%' }} />
         </div>
       </div>
@@ -210,8 +210,8 @@ export function ProductPreview() {
   }, [dragging])
 
   return (
-    <section className="py-24 px-4 border-y border-border bg-muted/10">
-      <div className="max-w-5xl mx-auto">
+    <section className="w-full border-y border-border bg-white py-24">
+      <div className="max-w-5xl mx-auto px-4">
         <p className="text-center text-xs font-mono text-muted-foreground mb-2 tracking-widest uppercase">
           [04] See Syz In Action
         </p>
@@ -237,29 +237,29 @@ export function ProductPreview() {
           </div>
 
           <div
-            className="absolute top-0 bottom-0 w-px bg-white/20 z-20 pointer-events-none"
+            className="absolute top-0 bottom-0 w-px bg-neutral-300 z-20 pointer-events-none"
             style={{ left: `${inset}%` }}
           />
 
           <button
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-9 h-11 bg-neutral-900 border border-neutral-600 rounded-sm flex items-center justify-center cursor-ew-resize hover:bg-neutral-800 transition-colors shadow-lg"
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-9 h-11 bg-white border border-neutral-300 rounded-sm flex items-center justify-center cursor-ew-resize hover:bg-neutral-100 transition-colors shadow-lg"
             style={{ left: `${inset}%` }}
             onMouseDown={(e) => { e.preventDefault(); setDragging(true) }}
             onTouchStart={() => { setDragging(true) }}
             aria-label="Drag to compare"
           >
-            <GripVertical className="w-4 h-4 text-neutral-300" />
+            <GripVertical className="w-4 h-4 text-neutral-500" />
           </button>
 
           <div className="absolute top-4 left-4 z-10 pointer-events-none">
-            <span className="text-[10px] font-mono text-red-400/80 tracking-widest uppercase bg-neutral-950/80 px-2 py-1">Before</span>
+            <span className="text-[10px] font-mono text-red-600 tracking-widest uppercase bg-white/95 border border-neutral-200 px-2 py-1 shadow-sm">Before</span>
           </div>
 
           <div
             className="absolute top-4 z-10 pointer-events-none"
             style={{ left: `calc(${inset}% + 14px)` }}
           >
-            <span className="text-[10px] font-mono text-emerald-400/80 tracking-widest uppercase bg-neutral-950/80 px-2 py-1">After</span>
+            <span className="text-[10px] font-mono text-emerald-700 tracking-widest uppercase bg-white/95 border border-neutral-200 px-2 py-1 shadow-sm">After</span>
           </div>
         </div>
 
