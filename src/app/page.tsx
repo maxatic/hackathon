@@ -21,6 +21,12 @@ export default function HomePage() {
             Open app
           </Link>
           <Link
+            href="/master-cv"
+            className="rounded-lg border border-[var(--border)] px-5 py-2.5 text-sm font-medium text-[var(--fg)]"
+          >
+            Master CV
+          </Link>
+          <Link
             href="/sign-in"
             className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
           >
