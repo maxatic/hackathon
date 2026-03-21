@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { parseFetchJson } from "@/lib/parse-fetch-json";
 
 type Props = { applicationId: string };
 
@@ -33,7 +34,7 @@ export function GenerateDocumentsButton({ applicationId }: Props) {
         method: "POST",
         credentials: "include",
       });
-      const data = (await res.json()) as {
+      const data = (await parseFetchJson(res)) as {
         error?: string;
         signedUrls?: SignedUrls;
       };

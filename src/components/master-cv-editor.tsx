@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { parseFetchJson } from "@/lib/parse-fetch-json";
 
 type ProfileFields = {
   fullName: string;
@@ -105,13 +106,32 @@ function fieldsToProfile(f: ProfileFields): Record<string, unknown> {
   };
 }
 
+type SaveResponse = {
+  updated_at?: string | null;
+  error?: string;
+  generate?: {
+    ok: boolean;
+    error?: string;
+    signedUrls?: {
+      cv: string | null;
+      coverLetter: string | null;
+      expiresIn?: number;
+    };
+  };
+};
+
 export function MasterCvEditor() {
   const [fields, setFields] = useState<ProfileFields>(empty);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [parsing, setParsing] = useState(false);
-  const [notice, setNotice] = useState<{ type: "ok" | "err"; text: string } | null>(
+  const [generatePdfs, setGeneratePdfs] = useState(true);
+  const [pdfLinks, setPdfLinks] = useState<{
+    cv: string | null;
+    coverLetter: string | null;
+  } | null>(null);
+  const [notice, setNotice] = useState<{ type: "ok" | "err" | "warn"; text: string } | null>(
     null,
   );
   const fileRef = useRef<HTMLInputElement>(null);
@@ -121,12 +141,13 @@ export function MasterCvEditor() {
     setNotice(null);
     try {
       const res = await fetch("/api/master-profile", { credentials: "include" });
-      const data = (await res.json()) as {
+      const data = (await parseFetchJson(res)) as {
         profile?: Record<string, unknown>;
         updated_at?: string | null;
+        error?: string;
       };
       if (!res.ok) {
-        setNotice({ type: "err", text: (data as { error?: string }).error ?? "Load failed" });
+        setNotice({ type: "err", text: data.error ?? "Load failed" });
         return;
       }
       const raw = data.profile && typeof data.profile === "object" && !Array.isArray(data.profile)
@@ -157,18 +178,47 @@ export function MasterCvEditor() {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile }),
+        body: JSON.stringify({ profile, generate: generatePdfs }),
       });
-      const data = await res.json();
+      const data = (await parseFetchJson(res)) as SaveResponse;
       if (!res.ok) {
         setNotice({
           type: "err",
-          text: (data as { error?: string }).error ?? "Save failed",
+          text: data.error ?? "Save failed",
         });
         return;
       }
-      setUpdatedAt((data as { updated_at?: string }).updated_at ?? new Date().toISOString());
-      setNotice({ type: "ok", text: "Saved. This profile is used when you generate applications." });
+      setUpdatedAt(data.updated_at ?? new Date().toISOString());
+      setPdfLinks(null);
+
+      if (!generatePdfs) {
+        setNotice({
+          type: "ok",
+          text: "Saved. This profile is used when you generate applications.",
+        });
+      } else {
+        const gen = data.generate;
+        if (gen?.ok && gen.signedUrls) {
+          setPdfLinks({
+            cv: gen.signedUrls.cv ?? null,
+            coverLetter: gen.signedUrls.coverLetter ?? null,
+          });
+          setNotice({
+            type: "ok",
+            text: "Profile saved and PDFs generated. Open the links below (or your browser may have blocked popups).",
+          });
+        } else if (gen && !gen.ok && gen.error) {
+          setNotice({
+            type: "warn",
+            text: `Profile saved, but PDF generation failed: ${gen.error}`,
+          });
+        } else {
+          setNotice({
+            type: "ok",
+            text: "Saved. This profile is used when you generate applications.",
+          });
+        }
+      }
     } catch (e) {
       setNotice({
         type: "err",
@@ -190,7 +240,7 @@ export function MasterCvEditor() {
         credentials: "include",
         body: form,
       });
-      const data = (await res.json()) as {
+      const data = (await parseFetchJson(res)) as {
         profile?: Record<string, unknown>;
         error?: string;
       };
@@ -269,10 +319,28 @@ export function MasterCvEditor() {
             disabled={busy}
             className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--bg)] disabled:opacity-60"
           >
-            {saving ? "Saving…" : "Save profile"}
+            {saving
+              ? generatePdfs
+                ? "Saving & generating…"
+                : "Saving…"
+              : "Save profile"}
           </button>
         </div>
       </div>
+
+      <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--muted)]">
+        <input
+          type="checkbox"
+          className="mt-1 rounded border-[var(--border)]"
+          checked={generatePdfs}
+          onChange={(e) => setGeneratePdfs(e.target.checked)}
+          disabled={busy}
+        />
+        <span>
+          After saving, generate master CV &amp; cover letter PDFs (AI). No job ID needed — we
+          keep a hidden application record for you automatically.
+        </span>
+      </label>
 
       {updatedAt ? (
         <p className="text-xs text-[var(--muted)]">
@@ -284,11 +352,42 @@ export function MasterCvEditor() {
 
       {notice ? (
         <p
-          className={`text-sm ${notice.type === "ok" ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+          className={`text-sm ${
+            notice.type === "ok"
+              ? "text-green-700 dark:text-green-400"
+              : notice.type === "warn"
+                ? "text-amber-800 dark:text-amber-400"
+                : "text-red-600 dark:text-red-400"
+          }`}
           role="status"
         >
           {notice.text}
         </p>
+      ) : null}
+
+      {pdfLinks ? (
+        <div className="flex flex-wrap gap-3">
+          {pdfLinks.cv ? (
+            <a
+              href={pdfLinks.cv}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-[var(--accent)] underline underline-offset-4"
+            >
+              Open CV (PDF)
+            </a>
+          ) : null}
+          {pdfLinks.coverLetter ? (
+            <a
+              href={pdfLinks.coverLetter}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-[var(--accent)] underline underline-offset-4"
+            >
+              Open cover letter (PDF)
+            </a>
+          ) : null}
+        </div>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">

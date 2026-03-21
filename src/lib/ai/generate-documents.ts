@@ -32,7 +32,7 @@ function buildPrompt(input: GenerateInput): string {
 
   return `You are an expert career writer for job seekers in Germany, Austria, and Switzerland (DACH).
 
-Target language for all user-facing text: ${lang}.
+Target language for all user-facing text in the CV: ${lang}.
 ${formal}
 
 The CV layout (LaTeX preamble, section order, resume macros, header with photo minipage, signature footer) is fixed in application code — you must NOT invent a custom CV LaTeX class or alternate section list.

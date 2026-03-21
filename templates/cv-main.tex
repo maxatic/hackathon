@@ -1,0 +1,227 @@
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+\usepackage{graphicx}
+
+%----------FONT OPTIONS----------
+% \usepackage[default]{sourcesanspro}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+%-----------HEADER WITH PHOTO-----------
+\noindent
+\begin{minipage}[t]{0.22\textwidth}
+    \vspace*{-15pt}
+    \includegraphics[width=\linewidth]{Photo 1.png}
+\end{minipage}
+\hspace{0.2cm}
+\begin{minipage}[t]{0.7\textwidth}
+    \vspace*{-0.43cm}
+    {\fontsize{26pt}{28pt}\selectfont\scshape Max Max}\\[2pt]
+    \large
+    Address\\
+    80392 Munich\\[15pt]
+    \normalsize
+    \href{mailto:issaliyev.maxat@gmail.com}{max.maxov@gmail.com}\\
+    Personal Website -- \href{https://www.maxat.live/}{Max.live}\\
+    Linkedin Page -- \href{https://www.linkedin.com/in/maxatic/}{Max}\\
+    +49 1234 456789\\[20pt]
+    Born: 6 March 2033 in Astana (Kazakhstan)
+\end{minipage}
+\vspace{12pt}
+
+%-----------SUMMARY-----------
+\section{Summary}
+\begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     Product Manager with hands-on analytics (SQL/Python) and GenAI (RAG/prompting) skills. Proven ability to write crisp specs, create product documentation, and align teams to outcomes. Recent wins include doubling engagement via user research and driving 20\%+ efficiency gains.
+    }}
+\end{itemize}
+
+%-----------EXPERIENCE-----------
+\section{Professional Experience}
+\resumeSubHeadingListStart    
+
+    \resumeSubheading
+    {Product Manager Intern}{08/2025 -- 02/2026}
+    {FAANG Company}{Munich, Germany}
+    \resumeItemListStart
+\resumeItem{Developed an internal AI agent by creating and training it on a 1500+ file knowledge base to deliver rapid strategic insights for 100+ vendors, reducing key metric retrieval time by 60\%.}
+\resumeItem{Generated over \$10M cost savings for FAANG EU Retail by EoY by monitoring and actioning Electronic Integration adoption metrics among 12 UK Vendors.}
+\resumeItem{Earned  \textquoteleft Learn and Be Curious\textquoteright\ award recognition for continuous learning and proactively exploring new solutions across an 80+ person Supply Chain team.}
+\resumeItem{Designed an automated data flow for monthly reporting (MBR and QBR) by retrieving and compiling all relevant metrics from the dataset, accelerating review generation time by 30\%.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Student Assistant}{05/2025 -- 08/2025}
+    {TUM Global Center for Family Enterprise}{Heilbronn, Germany}
+    \resumeItemListStart
+      \resumeItem{Enhanced research efficiency by 25\% by designing automated Excel and Python data workflows, supporting large-scale economic studies.}
+      \resumeItem{Coordinated with professors and research staff to streamline project documentation, cutting reporting time by 30\%}
+      \resumeItem{Strengthened cross-functional collaboration by presenting data-driven findings to academic and technical teams for refinement.}
+      \resumeItem{Delivered strategic insights by visualizing complex economic data, improving decision quality for ongoing faculty projects.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Working Student (Programs Team)}{09/2024 -- 02/2025}
+    {Startup Accelerator Company}{Heilbronn, Germany}
+    \resumeItemListStart
+        \resumeItem{Led a team of 4 to launch v2 of the Design Thinking program, prioritizing key funnel metrics that boosted engagement by 44\%, retention by 32\%, and user satisfaction (NPS) by 50\% }
+      \resumeItem{Led product marketing for a Design Thinking program through UX development, user testing, and A/B testing, improving homepage conversion rates by 33\%.}
+      \resumeItem{Analyzed feedback from 25+ user interviews, leading to a 25\% improvement in program features.}
+      \resumeItem{Optimized Agile delivery by developing a Jira Kanban board and maintaining a 5-week refined backlog, improving team efficiency by 20\% and accelerating program rollouts.}
+    \resumeItemListEnd
+
+  \resumeSubheading
+    {Product Manager Intern}{07/2023 -- 10/2023}
+    {Fortune 500 Company}{Astana, Kazakhstan}
+    \resumeItemListStart
+      \resumeItem{Improved a Dashboard portal’s User Experience, lowering employee setup time from 1 day to 10 minutes and saving an average of 2,000 manual hours per year.}
+      \resumeItem{Redesigned the user sign-up journey by partnering with design and engineering to reduce required steps from five to two, increasing new user conversion by 15\%.}
+      \resumeItem{Defined the product strategy for the 'Digital Window' unified service interface by writing a 50-page PRD, aligning 4+ cross-functional teams on the final insights and recommendation strategy.}
+    \resumeItemListEnd
+    
+\resumeSubHeadingListEnd
+
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+
+  \resumeSubheading
+    {Technical University of Munich}{10/2023 -- 10/2026}
+    {B.Sc. in Management and Technology, Minor in Computer Science}{Heilbronn, Germany}
+      \resumeItemListStart
+      \resumeItem{Relevant Coursework: Marketing and Innovation Management, Machine Learning and Data Science, Management Science, Introduction into Computer Science, Statistics for Business Administration}
+      \resumeItem{Achievements: TUMSelect - TUM's elite network connecting top students and alumni with premier partners.}
+    \resumeItemListEnd
+
+      \resumeSubheading
+    {Astana IT University}{09/2021 -- 09/2023}
+    {B.Sc. in Software Engineering}{Astana, Kazakhstan}
+    \resumeItemListStart
+        \resumeItem{Studied for two years to fulfill the academic requirements for enrollment at Technical University of Munich.}
+        \resumeItem{Key coursework: Advanced Databases, Software Design Patterns, Calculus II, Object Oriented Programming.}
+        \resumeItem{GPA: 3.3/4.0 (equivalent to 1.7 in the German System)}      
+\resumeItemListEnd
+
+\resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Selected Projects}
+\resumeSubHeadingListStart
+
+  \resumeProjectHeading
+    {\textbf{InvisID} $|$  \emph{Behavior-based authentication for identity verification}}{04/2024 -- 08/2024}
+    \resumeItemListStart
+      \resumeItem{Validated market demand for privacy-first authentication via 20+ interviews, prioritizing a local-only data feature.}
+    \resumeItem{Secured team alignment by defining the MVP feature set and creating a data-backed roadmap, which successfully guided the product through an MVP launch.}
+    \resumeItemListEnd
+
+  \resumeProjectHeading
+    {\textbf{Innovote} $|$ \emph{Mobile app for promoting student clubs}}{10/2023 -- 01/2024}
+    \resumeItemListStart
+      \resumeItem{Conducted user research, interviewing over 15 staff and students, to develop detailed user personas, define and prioritize use cases for each, and map out user journeys to inform the roadmap}
+      \resumeItem{Developed an adaptive iOS app design with over 20 pages and smooth animations, crafting a seamless user and brand experience}
+    \resumeItemListEnd
+
+  \resumeProjectHeading
+    {\textbf{Google Developer Groups} $|$ \emph{Tech community and Innovation}}{09/2022 -- 09/2023}
+    \resumeItemListStart
+      \resumeItem{Led the end-to-end planning and GTM strategy for DevFest 2023, providing technical training (Flutter, TensorFlow) to 134 developers and boosting attendance by 55\% to over 500 participants.}
+      \resumeItem{Launched high-growth initiatives (e.g., coding workshops, university partnerships) via strategic communication, engaging 200+ new developers and growing GDG membership by 325\% in 4 months.}
+    \resumeItemListEnd
+    
+\resumeSubHeadingListEnd
+
+
+
+%-----------SKILLS-----------
+\section{Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Technical}{: SQL (PostgreSQL), Python (NumPy, Pandas), Excel, Tableau, Git, PowerBI} \\
+     \textbf{Design}{: Figma, Sketch, Axure, Framer, Adobe XD, Miro, Affinity Designer, Adobe Photoshop} \\
+     \textbf{Project Management}{: Jira, Asana, Trello, Monday.com, Agile Frameworks, Confluence, Notion} \\
+    \textbf{Artificial Intelligence}{: Zapier, Copilot Studio, n8n, Amazon Quick Suite, Cursor AI} \\
+     \textbf{Languages}{} \\
+    }
+    }
+ \end{itemize}
+
+%-----------CERTIFICATIONS-----------
+\section{Certifications}
+\resumeSubHeadingListStart
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/1T1GdjcJy664ZUJ9d4NY7llijiqmtL4H1/view?usp=sharing}{\textbf{Meta} - Agentic AI - Essential Concepts for builders}}{September 2025}
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/16pGu4l85Dxo_qM3qOeXm59l56dhc72Nh/view?usp=sharing}{\textbf{Microsoft} - Product Management Essentials}}{August 2025}
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/193QQWH_3sv_ytbaYfkzEJra5PvvixHmS/view?usp=sharing}{\textbf{Cisco} - IT Essentials}}{February 2023}
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/1nwGcbudW5E9WjlGEPIBAK0LFxSm7L3th/view?usp=sharing}{\textbf{Meta} - Introduction to Social Media Marketing}}{February 2023}
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/1qcymjJmOLDozp66GfYRNg7LsvnreeCJW/view?usp=sharing}{\textbf{University of Pennsylvania} - Introduction to Marketing}}{February 2023}
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/1wN9m2hUTki-hpGokHspZIe4fe6MMl2dm/view?usp=sharing}{\textbf{Google} - Foundations of Project Management}}{January 2022}
+    \resumeProjectHeading{\href{https://drive.google.com/file/d/1931vCFh49fp78cK0vrABGA5nReE4L9yK/view?usp=sharing}{\textbf{Harvard University} - CS50x: Introduction to Computer Science}}{October 2021}
+    
+\resumeSubHeadingListEnd
+
+%-----------SIGNATURE-----------
+\vfill % This command pushes the following content to the bottom of the page
+\begin{center}
+    % Use the custom font command for the signature
+    Munich, \today % Date line
+\end{center}
+
+\end{document}
