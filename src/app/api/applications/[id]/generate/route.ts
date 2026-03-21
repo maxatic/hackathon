@@ -61,10 +61,15 @@ export async function POST(_request: Request, context: RouteContext) {
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Generation failed";
-    const status =
-      message.includes("Missing GOOGLE_GENERATIVE_AI_API_KEY") ||
-      message.includes("API key")
-        ? 503
+    const isQuota =
+      message.includes("429") ||
+      message.includes("quota") ||
+      message.includes("Quota") ||
+      message.includes("rate limit");
+    const status = message.includes("Missing GOOGLE_GENERATIVE_AI_API_KEY")
+      ? 503
+      : isQuota
+        ? 429
         : 500;
     return NextResponse.json({ error: message }, { status });
   }
@@ -113,7 +118,7 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   const metaBase = {
-    model: process.env.GOOGLE_AI_MODEL ?? "gemini-1.5-flash",
+    model: process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash",
     locale: app.locale,
   };
 

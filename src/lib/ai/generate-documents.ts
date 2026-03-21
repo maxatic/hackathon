@@ -62,17 +62,34 @@ export async function generateDocuments(
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
+  const modelName = process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash";
   const model = genAI.getGenerativeModel({
-    model: process.env.GOOGLE_AI_MODEL ?? "gemini-1.5-flash",
+    model: modelName,
   });
 
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.35,
-    },
-  });
+  let result;
+  try {
+    result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.35,
+      },
+    });
+  } catch (err: unknown) {
+    const raw = err instanceof Error ? err.message : String(err);
+    if (
+      raw.includes("429") ||
+      raw.includes("Too Many Requests") ||
+      raw.includes("quota") ||
+      raw.includes("Quota")
+    ) {
+      throw new Error(
+        `Gemini quota or rate limit (${modelName}). Wait 1–2 minutes and try again. If this persists, open Google AI Studio → enable billing or create a new API key, or set GOOGLE_AI_MODEL in .env.local to another model (see .env.example). Raw: ${raw.slice(0, 400)}`,
+      );
+    }
+    throw err;
+  }
 
   const text = result.response.text();
   let parsed: unknown;
