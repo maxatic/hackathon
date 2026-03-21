@@ -1,4 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  CV_STRUCTURED_SCHEMA,
+  buildCvLatexFromStructured,
+  buildCvPlainFromStructured,
+  parseCvStructured,
+} from "@/lib/ai/cv-template";
 
 export type GenerateInput = {
   locale: "de" | "en";
@@ -29,6 +35,9 @@ function buildPrompt(input: GenerateInput): string {
 Target language for all user-facing text: ${lang}.
 ${formal}
 
+The CV layout (LaTeX preamble, section order, resume macros, header with photo minipage, signature footer) is fixed in application code — you must NOT invent a custom CV LaTeX class or alternate section list.
+You only provide structured JSON in "cv_structured" so the app can fill the canonical template (same design as the reference resume: Summary, Professional Experience, Education, Selected Projects, Skills, Certifications, then date line).
+
 Master profile (JSON — may be partial or empty; infer reasonably):
 ${profileJson}
 
@@ -40,17 +49,17 @@ Job context:
 ${input.jdText || "(no description provided)"}
 """
 
-Return ONLY valid JSON with these exact string keys (no markdown fences):
+Return ONLY valid JSON with these exact top-level keys (no markdown fences):
 {
-  "cv_latex": "Full LaTeX source for a compact ATS-friendly CV using article class, standard fonts (no exotic packages). Sections: summary, experience, education, skills, languages.",
+${CV_STRUCTURED_SCHEMA},
   "cover_letter_latex": "Full LaTeX source for a formal ${input.locale === "de" ? "Anschreiben" : "cover letter"} (letter class or article), addressed to the company, referencing the role and 2–3 concrete JD requirements.",
-  "cv_plain": "Plain text version of the CV content only (no LaTeX), suitable for PDF rendering. Use clear section headings in CAPS or Title Case and bullet lines with - .",
   "cover_letter_plain": "Plain text version of the cover letter only (no LaTeX), with greeting, body paragraphs, closing."
 }
 
 Rules:
-- Tailor content to the job description; do not invent employers or degrees not implied by the profile.
-- Keep LaTeX self-contained and compilable in principle (use only common packages if any: inputenc, geometry).`;
+- Fill cv_structured from the master profile and tailor bullets to the job description; do not invent employers or degrees not implied by the profile.
+- Keep arrays present (use [] if a section has no items).
+- cover_letter_latex: self-contained and compilable in principle (common packages only if needed).`;
 }
 
 export async function generateDocuments(
@@ -102,19 +111,29 @@ export async function generateDocuments(
   if (
     typeof parsed !== "object" ||
     parsed === null ||
-    !("cv_latex" in parsed) ||
+    !("cv_structured" in parsed) ||
     !("cover_letter_latex" in parsed) ||
-    !("cv_plain" in parsed) ||
     !("cover_letter_plain" in parsed)
   ) {
-    throw new Error("AI JSON missing required keys");
+    throw new Error(
+      "AI JSON missing required keys (cv_structured, cover_letter_latex, cover_letter_plain)",
+    );
   }
 
   const o = parsed as Record<string, unknown>;
+
+  let cvStructured;
+  try {
+    cvStructured = parseCvStructured(o.cv_structured);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Invalid cv_structured";
+    throw new Error(msg);
+  }
+
   return {
-    cv_latex: String(o.cv_latex ?? ""),
+    cv_latex: buildCvLatexFromStructured(cvStructured),
+    cv_plain: buildCvPlainFromStructured(cvStructured),
     cover_letter_latex: String(o.cover_letter_latex ?? ""),
-    cv_plain: String(o.cv_plain ?? ""),
     cover_letter_plain: String(o.cover_letter_plain ?? ""),
   };
 }
