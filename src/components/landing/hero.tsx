@@ -70,7 +70,7 @@ export function Hero() {
           ) {
             ;(el as HTMLElement).style.cssText =
               'display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important;position:absolute!important;left:-9999px!important;top:-9999px!important;'
-            try { el.remove() } catch (_) {}
+            try { el.remove() } catch { /* ignore */ }
           }
         })
       })
@@ -89,7 +89,7 @@ export function Hero() {
       clearTimeout(t2)
       clearTimeout(t3)
       clearTimeout(t4)
-      try { document.head.removeChild(embedScript) } catch (_) {}
+      try { document.head.removeChild(embedScript) } catch { /* ignore */ }
       const s = document.getElementById('unicorn-hero-styles')
       if (s) document.head.removeChild(s)
     }

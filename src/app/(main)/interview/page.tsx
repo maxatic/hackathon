@@ -1,14 +1,18 @@
-import { FeaturePlaceholder } from "@/components/feature-placeholder";
-import { mainNav } from "@/lib/nav";
-
-const nav = mainNav.find((n) => n.href === "/interview")!;
+import { Suspense } from "react";
+import { InterviewContent } from "./interview-content";
 
 export default function InterviewPage() {
   return (
-    <FeaturePlaceholder title="Interview coach" nav={nav}>
-      <p className="text-sm text-[var(--muted)]">
-        ElevenLabs conversational agent UI goes here — no backend route yet.
-      </p>
-    </FeaturePlaceholder>
+    <Suspense
+      fallback={
+        <div className="mx-auto flex max-w-4xl flex-1 items-center justify-center px-4 py-12">
+          <p className="text-sm tracking-widest text-[var(--muted)]">
+            LOADING...
+          </p>
+        </div>
+      }
+    >
+      <InterviewContent />
+    </Suspense>
   );
 }
