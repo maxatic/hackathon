@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { parseFetchJson } from "@/lib/parse-fetch-json";
 
 type ProfileFields = {
@@ -27,7 +27,11 @@ const empty: ProfileFields = {
   languages: "",
 };
 
+/** Map a raw profile blob (either flat legacy or structured from parse) into form fields. */
 function profileToFields(p: Record<string, unknown>): ProfileFields {
+  if ("header" in p && typeof p.header === "object" && p.header !== null) {
+    return structuredToFields(p);
+  }
   return {
     fullName: String(p.fullName ?? ""),
     email: String(p.email ?? ""),
@@ -38,6 +42,49 @@ function profileToFields(p: Record<string, unknown>): ProfileFields {
     experience: String(p.experience ?? ""),
     education: String(p.education ?? ""),
     languages: String(p.languages ?? ""),
+  };
+}
+
+/** Convert `CvStructuredContent`-shaped profile into flat form fields. */
+function structuredToFields(p: Record<string, unknown>): ProfileFields {
+  const h = (p.header ?? {}) as Record<string, unknown>;
+  const addressLines = Array.isArray(h.addressLines) ? (h.addressLines as string[]) : [];
+
+  const expArr = Array.isArray(p.experience) ? (p.experience as Record<string, unknown>[]) : [];
+  const experience = expArr
+    .map((e) => {
+      const bullets = Array.isArray(e.bullets) ? (e.bullets as string[]) : [];
+      const bulletStr = bullets.map((b) => `  - ${b}`).join("\n");
+      return `${e.title ?? ""} | ${e.dateRange ?? ""}\n${e.organization ?? ""} | ${e.location ?? ""}${bulletStr ? "\n" + bulletStr : ""}`;
+    })
+    .join("\n\n");
+
+  const eduArr = Array.isArray(p.education) ? (p.education as Record<string, unknown>[]) : [];
+  const education = eduArr
+    .map((e) => {
+      const bullets = Array.isArray(e.bullets) ? (e.bullets as string[]) : [];
+      const bulletStr = bullets.map((b) => `  - ${b}`).join("\n");
+      return `${e.institution ?? ""} | ${e.dateRange ?? ""}\n${e.degree ?? ""} | ${e.location ?? ""}${bulletStr ? "\n" + bulletStr : ""}`;
+    })
+    .join("\n\n");
+
+  const sk = (p.skills ?? {}) as Record<string, unknown>;
+  const skillParts: string[] = [];
+  if (sk.technical) skillParts.push(String(sk.technical));
+  if (sk.design) skillParts.push(String(sk.design));
+  if (sk.projectManagement) skillParts.push(String(sk.projectManagement));
+  if (sk.artificialIntelligence) skillParts.push(String(sk.artificialIntelligence));
+
+  return {
+    fullName: String(h.name ?? ""),
+    email: String(h.email ?? ""),
+    phone: String(h.phone ?? ""),
+    location: addressLines.join(", "),
+    summary: String(p.summary ?? ""),
+    skills: skillParts.join(", "),
+    experience,
+    education,
+    languages: String(sk.languages ?? ""),
   };
 }
 
@@ -78,6 +125,7 @@ export function MasterCvEditor() {
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [generatePdfs, setGeneratePdfs] = useState(true);
   const [pdfLinks, setPdfLinks] = useState<{
     cv: string | null;
@@ -86,6 +134,7 @@ export function MasterCvEditor() {
   const [notice, setNotice] = useState<{ type: "ok" | "err" | "warn"; text: string } | null>(
     null,
   );
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -98,7 +147,7 @@ export function MasterCvEditor() {
         error?: string;
       };
       if (!res.ok) {
-        setNotice({ type: "err", text: (data as { error?: string }).error ?? "Load failed" });
+        setNotice({ type: "err", text: data.error ?? "Load failed" });
         return;
       }
       const raw = data.profile && typeof data.profile === "object" && !Array.isArray(data.profile)
@@ -180,6 +229,44 @@ export function MasterCvEditor() {
     }
   }
 
+  async function handleUpload(file: File) {
+    setParsing(true);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/master-profile/parse", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      const data = (await parseFetchJson(res)) as {
+        profile?: Record<string, unknown>;
+        error?: string;
+      };
+      if (!res.ok) {
+        setNotice({ type: "err", text: data.error ?? "Parse failed" });
+        return;
+      }
+      if (data.profile && typeof data.profile === "object") {
+        setFields(structuredToFields(data.profile));
+        setUpdatedAt(new Date().toISOString());
+        setNotice({
+          type: "ok",
+          text: "CV parsed and saved. Review the fields below, then click Save if you make edits.",
+        });
+      }
+    } catch (e) {
+      setNotice({
+        type: "err",
+        text: e instanceof Error ? e.message : "Upload failed",
+      });
+    } finally {
+      setParsing(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
   function set<K extends keyof ProfileFields>(key: K, value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
   }
@@ -189,6 +276,8 @@ export function MasterCvEditor() {
       <p className="text-sm text-[var(--muted)]">Loading your profile…</p>
     );
   }
+
+  const busy = saving || parsing;
 
   const inputClass =
     "mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]";
@@ -205,18 +294,38 @@ export function MasterCvEditor() {
             documents.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={save}
-          disabled={saving}
-          className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--bg)] disabled:opacity-60"
-        >
-          {saving
-            ? generatePdfs
-              ? "Saving & generating…"
-              : "Saving…"
-            : "Save profile"}
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUpload(file);
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={busy}
+            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--fg)] disabled:opacity-60"
+          >
+            {parsing ? "Parsing CV…" : "Upload PDF"}
+          </button>
+          <button
+            type="button"
+            onClick={save}
+            disabled={busy}
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--bg)] disabled:opacity-60"
+          >
+            {saving
+              ? generatePdfs
+                ? "Saving & generating…"
+                : "Saving…"
+              : "Save profile"}
+          </button>
+        </div>
       </div>
 
       <label className="flex cursor-pointer items-start gap-2 text-sm text-[var(--muted)]">
@@ -225,7 +334,7 @@ export function MasterCvEditor() {
           className="mt-1 rounded border-[var(--border)]"
           checked={generatePdfs}
           onChange={(e) => setGeneratePdfs(e.target.checked)}
-          disabled={saving}
+          disabled={busy}
         />
         <span>
           After saving, generate master CV &amp; cover letter PDFs (AI). No job ID needed — we
