@@ -9,14 +9,22 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
-/** Matches \\includegraphics in templates/cv-main.tex when no real photo is uploaded. */
-const PHOTO_FILENAME = "Photo 1.png";
-
-/** Minimal valid 1×1 PNG (transparent). */
+/** Minimal valid 1×1 white PNG — used as placeholder for any \\includegraphics references. */
 const PLACEHOLDER_PNG = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC",
   "base64",
 );
+
+/** Extract all image filenames from \\includegraphics[…]{filename} in the tex source. */
+function extractImageFilenames(tex: string): string[] {
+  const re = /\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}/g;
+  const names: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(tex)) !== null) {
+    names.push(m[1]);
+  }
+  return [...new Set(names)];
+}
 
 export type LatexPdfEngine = "tectonic" | "pdflatex";
 
@@ -88,7 +96,10 @@ export function tryCompileLatexToPdf(
   const texPath = join(workDir, texName);
 
   try {
-    writeFileSync(join(workDir, PHOTO_FILENAME), PLACEHOLDER_PNG);
+    for (const img of extractImageFilenames(texSource)) {
+      const imgPath = join(workDir, img);
+      if (!existsSync(imgPath)) writeFileSync(imgPath, PLACEHOLDER_PNG);
+    }
 
     const prefer = process.env.LATEX_PDF_ENGINE?.toLowerCase();
 

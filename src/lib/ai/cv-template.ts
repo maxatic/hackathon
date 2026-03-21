@@ -223,14 +223,7 @@ function buildSummaryLatex(summary: string): string {
 }
 
 function buildExperienceLatex(rows: CvExperienceEntry[]): string {
-  if (!rows.length) {
-    return String.raw`
-%-----------EXPERIENCE-----------
-\section{Professional Experience}
-\resumeSubHeadingListStart
-\resumeSubHeadingListEnd
-`;
-  }
+  if (!rows.length) return "";
   const blocks = rows
     .map((e) => {
       const bullets =
@@ -258,14 +251,7 @@ ${blocks}
 }
 
 function buildEducationLatex(rows: CvEducationEntry[]): string {
-  if (!rows.length) {
-    return String.raw`
-%-----------EDUCATION-----------
-\section{Education}
-\resumeSubHeadingListStart
-\resumeSubHeadingListEnd
-`;
-  }
+  if (!rows.length) return "";
   const blocks = rows
     .map((e) => {
       const bullets =
@@ -293,14 +279,7 @@ ${blocks}
 }
 
 function buildProjectsLatex(rows: CvProjectEntry[]): string {
-  if (!rows.length) {
-    return String.raw`
-%-----------PROJECTS-----------
-\section{Selected Projects}
-\resumeSubHeadingListStart
-\resumeSubHeadingListEnd
-`;
-  }
+  if (!rows.length) return "";
   const blocks = rows
     .map((p) => {
       const heading = String.raw`\textbf{${escapeLatex(p.title)}} $|$  \emph{${escapeLatex(p.subtitle)}}`;
@@ -367,14 +346,7 @@ function buildSkillsLatex(sk: CvSkillsBlock): string {
 }
 
 function buildCertificationsLatex(rows: CvCertificationEntry[]): string {
-  if (!rows.length) {
-    return String.raw`
-%-----------CERTIFICATIONS-----------
-\section{Certifications}
-\resumeSubHeadingListStart
-\resumeSubHeadingListEnd
-`;
-  }
+  if (!rows.length) return "";
   const blocks = rows
     .map((c) => {
       const boldTitle = c.issuer?.trim()
