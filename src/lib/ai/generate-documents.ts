@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export type GenerateInput = {
@@ -15,6 +17,23 @@ export type GeneratedPair = {
   cover_letter_plain: string;
 };
 
+let cachedCvTemplate: string | null = null;
+
+function loadCvLatexTemplate(): string {
+  if (cachedCvTemplate !== null) {
+    return cachedCvTemplate;
+  }
+  const filePath = path.join(process.cwd(), "templates", "cv-main.tex");
+  try {
+    cachedCvTemplate = readFileSync(filePath, "utf8");
+  } catch {
+    throw new Error(
+      `Missing CV template at templates/cv-main.tex (copy your main.tex there).`,
+    );
+  }
+  return cachedCvTemplate;
+}
+
 function buildPrompt(input: GenerateInput): string {
   const lang = input.locale === "de" ? "German" : "English";
   const formal =
@@ -23,10 +42,11 @@ function buildPrompt(input: GenerateInput): string {
       : "Use professional, formal tone for the cover letter.";
 
   const profileJson = JSON.stringify(input.masterProfile, null, 2);
+  const cvTemplate = loadCvLatexTemplate();
 
   return `You are an expert career writer for job seekers in Germany, Austria, and Switzerland (DACH).
 
-Target language for all user-facing text: ${lang}.
+Target language for all user-facing text in the CV: ${lang}.
 ${formal}
 
 Master profile (JSON — may be partial or empty; infer reasonably):
@@ -40,17 +60,54 @@ Job context:
 ${input.jdText || "(no description provided)"}
 """
 
+--- REFERENCE CV LaTeX TEMPLATE (design + outline only) ---
+The following file defines the REQUIRED layout, packages, macros, and section order for cv_latex.
+You must COPY this structure (preamble, environments, commands, spacing), NOT the example biographical content inside it.
+
+${cvTemplate}
+--- END REFERENCE TEMPLATE ---
+
 Return ONLY valid JSON with these exact string keys (no markdown fences):
 {
-  "cv_latex": "Full LaTeX source for a compact ATS-friendly CV using article class, standard fonts (no exotic packages). Sections: summary, experience, education, skills, languages.",
-  "cover_letter_latex": "Full LaTeX source for a formal ${input.locale === "de" ? "Anschreiben" : "cover letter"} (letter class or article), addressed to the company, referencing the role and 2–3 concrete JD requirements.",
-  "cv_plain": "Plain text version of the CV content only (no LaTeX), suitable for PDF rendering. Use clear section headings in CAPS or Title Case and bullet lines with - .",
-  "cover_letter_plain": "Plain text version of the cover letter only (no LaTeX), with greeting, body paragraphs, closing."
+  "cv_latex": "...",
+  "cover_letter_latex": "...",
+  "cv_plain": "...",
+  "cover_letter_plain": "..."
 }
 
-Rules:
-- Tailor content to the job description; do not invent employers or degrees not implied by the profile.
-- Keep LaTeX self-contained and compilable in principle (use only common packages if any: inputenc, geometry).`;
+=== cv_latex (strict) ===
+1. From \\documentclass through the last \\newcommand before \\begin{document} (the entire preamble + macro definitions), reproduce the reference template VERBATIM — same packages, lengths, \\titleformat, and every \\newcommand (\\resumeItem … \\resumeItemListEnd) exactly as in the template. Do not swap article for another class or remove packages.
+2. From \\begin{document} to \\end{document}: keep the SAME visual structure and section order as the template:
+   - Header: left minipage with \\includegraphics[width=\\linewidth]{Photo 1.png} (keep this line as-is), right minipage with {\\fontsize{26pt}{28pt}\\selectfont\\scshape <Name>}, then address block, \\href{mailto:…}{…}, optional website/LinkedIn lines, phone, optional birth line if present in profile — all filled ONLY from the master profile, never from the template’s example text.
+   - \\section{Summary} using the same itemize wrapper as the template.
+   - \\section{Professional Experience} with \\resumeSubHeadingListStart, repeated blocks of \\resumeSubheading{Title}{dates}{Company}{Location}, \\resumeItemListStart, one or more \\resumeItem{…}, \\resumeItemListEnd, then \\resumeSubHeadingListEnd.
+   - \\section{Education} with the same \\resumeSubheading / \\resumeItem pattern.
+   - \\section{Selected Projects} only if the profile implies projects; otherwise omit this entire section (no empty \\section). When included, use \\resumeProjectHeading{\\textbf{Name} $|$ \\emph{subtitle}}{dates} like the template (math-mode pipe between title and subtitle).
+   - \\section{Skills} using the same single itemize with \\small{\\item{ ... \\textbf{Category}{: items} \\}} pattern as the template (adapt category names to the profile).
+   - \\section{Certifications} only if the profile has certifications; otherwise omit the whole section. Use \\resumeProjectHeading with \\href when URLs exist; otherwise plain text.
+   - Closing: \\vfill, \\begin{center} <city from profile or location>, \\today \\end{center} — mirror the template’s signature block, not the template’s city if it differs from profile.
+3. CRITICAL: Do NOT copy any names, employers, dates, bullets, metrics, URLs, project titles, or certificate titles from the reference template. Every fact must come from the master profile (and job tailoring where relevant). If the profile lacks a field, omit that line or subsection rather than inventing or reusing template filler.
+4. Escape LaTeX special characters in user-derived strings: backslash, $, %, #, _, {, }, ~, ^, &.
+5. Output one complete compilable .tex document string (the full file).
+
+=== cv_plain (strict) ===
+Mirror the SAME outline and hierarchy as the LaTeX CV above, in plain text only (no LaTeX, no markdown):
+- Header block: name (prominent), address lines, email, links if in profile, phone, optional birth — same order as the template header.
+- Blank line, then SUMMARY (section title in Title Case or ALL CAPS), then paragraph(s).
+- PROFESSIONAL EXPERIENCE: for each role, a title line, company/location line, dates, then lines starting with " - " for bullets.
+- EDUCATION: same pattern.
+- SELECTED PROJECTS: only if profile supports it.
+- SKILLS: grouped lines like "TECHNICAL: …" / "LANGUAGES: …" matching the template’s category style.
+- CERTIFICATIONS: only if in profile.
+- Footer line: "<City>, <current month year>" similar to the template closing.
+Again: zero wording copied from the template example; only profile-derived (and JD-tailored) content.
+
+=== cover_letter_latex / cover_letter_plain ===
+Unchanged expectation: formal ${input.locale === "de" ? "Anschreiben" : "cover letter"} to the company, referencing the role and 2–3 concrete JD requirements. Letter may use a simple letter/article class; it does NOT need to match the CV preamble.
+
+General rules:
+- Tailor to the job description where a JD is provided; do not invent employers or degrees not implied by the profile.
+- JSON string values must escape backslashes and quotes as required by JSON.`;
 }
 
 export async function generateDocuments(
