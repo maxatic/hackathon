@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className="dark">
+      <html lang="en">
         <body className={`${inter.className} ${jetbrainsMono.variable} min-h-screen antialiased`}>{children}</body>
       </html>
     </ClerkProvider>

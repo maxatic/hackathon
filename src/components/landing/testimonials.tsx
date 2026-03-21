@@ -36,7 +36,7 @@ const small2 = {
 
 export function Testimonials() {
   return (
-    <section className="py-24 px-4 border-y border-border bg-muted/10">
+    <section className="py-24 px-4 border-y border-border bg-white">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="space-y-3">
           <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase">
@@ -55,9 +55,11 @@ export function Testimonials() {
             <CardHeader className="pb-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/google-white-icon-zbNQ10GndafNp2onY8yq0tRijO6Sp7.webp"
+                src="/icons/icons8-google-logo.svg"
                 alt="Google"
-                className="h-16 w-auto"
+                width={64}
+                height={64}
+                className="h-16 w-16"
               />
             </CardHeader>
             <CardContent>

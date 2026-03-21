@@ -41,7 +41,7 @@ function useScrollProgress(ref: React.RefObject<HTMLElement | null>) {
   return progress
 }
 
-function TimelineStep({ item, index }: { item: TimelineItem; index: number }) {
+function TimelineStep({ item }: { item: TimelineItem }) {
   const ref = useRef<HTMLDivElement>(null)
   const progress = useScrollProgress(ref as React.RefObject<HTMLElement>)
 
@@ -104,7 +104,7 @@ export function Timeline({ items, className }: TimelineProps) {
     >
       <div className="relative">
         {items.map((item, index) => (
-          <TimelineStep key={index} item={item} index={index} />
+          <TimelineStep key={index} item={item} />
         ))}
       </div>
     </section>

@@ -22,7 +22,7 @@ export function Navbar() {
   return (
     <header
       className={cn(
-        'fixed top-0 inset-x-0 z-50 transition-all duration-300 border-b',
+        'fixed top-0 inset-x-0 z-[100000000] transition-all duration-300 border-b',
         scrolled
           ? 'border-border/60 bg-background/90 backdrop-blur-md'
           : 'border-transparent bg-transparent'
@@ -60,7 +60,7 @@ export function Navbar() {
             <>
               <Link
                 href="/sign-in"
-                className="inline-flex items-center h-8 px-4 text-sm border border-white/30 text-foreground font-mono font-medium hover:border-white/60 transition-colors"
+                className="inline-flex items-center h-8 px-4 text-sm border border-border text-foreground font-mono font-medium hover:border-muted-foreground/40 transition-colors"
               >
                 Sign In
               </Link>
@@ -110,7 +110,7 @@ export function Navbar() {
               <>
                 <Link
                   href="/sign-in"
-                  className="flex-1 inline-flex items-center justify-center h-9 px-4 text-sm border border-white/30 text-foreground font-mono font-medium"
+                  className="flex-1 inline-flex items-center justify-center h-9 px-4 text-sm border border-border text-foreground font-mono font-medium"
                   onClick={() => setOpen(false)}
                 >
                   Sign In

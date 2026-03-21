@@ -175,7 +175,8 @@ export function Pricing() {
   const [billPlan, setBillPlan] = useState<BillPlan>('monthly')
 
   return (
-    <section id="pricing" className="py-24 px-4 max-w-6xl mx-auto">
+    <section id="pricing" className="w-full bg-white">
+      <div className="max-w-6xl mx-auto px-4 py-24">
       <div className="mb-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
         <div className="max-w-xl">
           <p className="text-xs font-mono text-muted-foreground mb-3 tracking-widest uppercase">
@@ -198,12 +199,12 @@ export function Pricing() {
             </span>
             <button
               onClick={() => setBillPlan(p => p === 'monthly' ? 'annually' : 'monthly')}
-              className="relative w-11 h-6 rounded-full bg-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+              className="relative w-11 h-6 rounded-full bg-neutral-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
               aria-label="Toggle billing period"
             >
               <span
                 className={cn(
-                  'absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-300 ease-in-out',
+                  'absolute top-1 left-1 w-4 h-4 rounded-full bg-foreground transition-transform duration-300 ease-in-out',
                   billPlan === 'annually' ? 'translate-x-5' : 'translate-x-0'
                 )}
               />
@@ -236,6 +237,7 @@ export function Pricing() {
         Student? Get Pro for{' '}
         <span className="text-foreground">€9.90/mo</span> with your university email.
       </p>
+      </div>
     </section>
   )
 }
