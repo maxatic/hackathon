@@ -91,20 +91,20 @@ function ApplicationCard({ app, index }: { app: Application; index: number }) {
       transition={{ duration: 0.45, delay: index * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       <div className="relative flex-shrink-0 flex flex-col items-center">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-sm bg-neutral-900 border border-neutral-800 flex items-center justify-center z-10">
-          <span className="font-mono text-base font-bold text-neutral-300">{letter}</span>
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-sm bg-white border border-border shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center justify-center z-10">
+          <span className="font-mono text-base font-semibold text-muted-foreground">{letter}</span>
         </div>
       </div>
 
       <div className={cn(
-        'flex-1 mb-10 rounded-sm border bg-neutral-950 p-6 sm:p-7 transition-all duration-300 hover:border-neutral-600',
-        app.status === 'completed' ? 'border-success/20' : app.status === 'ongoing' ? 'border-blue-500/20' : 'border-neutral-800'
+        'flex-1 mb-10 rounded-sm border bg-card p-6 sm:p-7 transition-all duration-300 hover:border-muted-foreground/30',
+        app.status === 'completed' ? 'border-success/30' : app.status === 'ongoing' ? 'border-blue-500/30' : 'border-border'
       )}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
           <div>
-            <h3 className="font-mono text-sm font-semibold text-white leading-snug">{app.title}</h3>
-            <p className="font-mono text-[11px] text-neutral-500 mt-0.5">
-              {app.company} <span className="mx-1.5 text-neutral-700">•</span> {app.date}
+            <h3 className="font-mono text-sm font-semibold text-foreground leading-snug">{app.title}</h3>
+            <p className="font-mono text-[11px] text-muted-foreground mt-0.5">
+              {app.company} <span className="mx-1.5 text-muted-foreground/60">•</span> {app.date}
             </p>
           </div>
           <span className={cn(
@@ -116,11 +116,11 @@ function ApplicationCard({ app, index }: { app: Application; index: number }) {
           </span>
         </div>
 
-        <p className="font-mono text-[12px] text-neutral-400 leading-relaxed mb-4">
+        <p className="font-mono text-[12px] text-muted-foreground leading-relaxed mb-4">
           {app.description}
         </p>
 
-        <div className="h-1 bg-neutral-800 rounded-full overflow-hidden mt-2">
+        <div className="h-1 bg-muted rounded-full overflow-hidden mt-2">
           <motion.div
             className={cn(
               'h-full rounded-full',
@@ -139,21 +139,21 @@ function ApplicationCard({ app, index }: { app: Application; index: number }) {
 
 export function ApplicationTimeline() {
   return (
-    <section className="bg-black border-t border-neutral-900 py-28 px-6">
+    <section className="bg-white border-t border-border py-28 px-6">
       <div className="max-w-6xl mx-auto">
-        <p className="font-mono text-[11px] text-neutral-500 tracking-widest uppercase mb-4">
+        <p className="font-mono text-[11px] text-muted-foreground tracking-widest uppercase mb-4">
           [03.5] Applications
         </p>
-        <h2 className="font-mono text-3xl sm:text-4xl font-bold text-white mb-3 text-balance">
+        <h2 className="font-mono text-3xl sm:text-4xl font-bold text-foreground mb-3 text-balance">
           Your applications,<br />
-          <span className="text-neutral-500">tracked automatically.</span>
+          <span className="text-muted-foreground">tracked automatically.</span>
         </h2>
-        <p className="font-mono text-sm text-neutral-500 mb-16">
+        <p className="font-mono text-sm text-muted-foreground mb-16">
           Every Node-CV and cover letter Syz generates is logged here with its status.
         </p>
 
         <div className="relative">
-          <div className="absolute left-5 sm:left-6 top-0 bottom-8 w-px bg-neutral-800" aria-hidden="true" />
+          <div className="absolute left-5 sm:left-6 top-0 bottom-8 w-px bg-border" aria-hidden="true" />
           <div>
             {applications.map((app, i) => (
               <ApplicationCard key={i} app={app} index={i} />
