@@ -169,9 +169,31 @@ export async function generateDocuments(
 
   const o = parsed as Record<string, unknown>;
   return {
-    cv_latex: String(o.cv_latex ?? ""),
-    cover_letter_latex: String(o.cover_letter_latex ?? ""),
+    cv_latex: fixLatexEscaping(String(o.cv_latex ?? "")),
+    cover_letter_latex: fixLatexEscaping(String(o.cover_letter_latex ?? "")),
     cv_plain: String(o.cv_plain ?? ""),
     cover_letter_plain: String(o.cover_letter_plain ?? ""),
   };
+}
+
+/**
+ * AI models frequently emit `\[…pt]` when they mean `\\[…pt]` (line break
+ * with vertical spacing), because the JSON→string decode eats one layer of
+ * backslash. Likewise `$\vcenter…$` can lose its backslash in labelitemii.
+ * This function patches the most common breakage patterns.
+ */
+function fixLatexEscaping(tex: string): string {
+  let out = tex;
+
+  // AI emits \[Xpt] (math display) instead of \\[Xpt] (line break + vspace).
+  out = out.replace(/(?<!\\)\\\[(\d+pt)\]/g, "\\\\[$1]");
+
+  // AI drops the $…$ math-mode wrapper around \vcenter in labelitemii.
+  // Template: $\vcenter{\hbox{\tiny$\bullet$}}$
+  out = out.replace(
+    /\\renewcommand\\labelitemii\{\\vcenter\{\\hbox\{\\tiny\$\\bullet\$\}\}\}/g,
+    "\\renewcommand\\labelitemii{$\\vcenter{\\hbox{\\tiny$\\bullet$}}$}",
+  );
+
+  return out;
 }

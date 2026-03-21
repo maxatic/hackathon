@@ -1,10 +1,15 @@
-import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { NextResponse } from "next/server";
 
-function commandOnPath(cmd: string): boolean {
-  const which = process.platform === "win32" ? "where" : "which";
-  const r = spawnSync(which, [cmd], { encoding: "utf8" });
-  return r.status === 0;
+function commandAvailable(cmd: string): boolean {
+  const candidates = [
+    join(homedir(), "bin", cmd),
+    `/usr/local/bin/${cmd}`,
+    `/opt/homebrew/bin/${cmd}`,
+  ];
+  return candidates.some((p) => existsSync(p));
 }
 
 export async function GET() {
@@ -26,8 +31,8 @@ export async function GET() {
       ? { disabled: true as const, note: "DISABLE_LATEX_PDF=1" }
       : {
           disabled: false as const,
-          tectonicOnPath: commandOnPath("tectonic"),
-          pdflatexOnPath: commandOnPath("pdflatex"),
+          tectonicAvailable: commandAvailable("tectonic"),
+          pdflatexAvailable: commandAvailable("pdflatex"),
           hint: "Install tectonic (brew install tectonic) for CV PDFs that match templates/cv-main.tex",
         },
   });

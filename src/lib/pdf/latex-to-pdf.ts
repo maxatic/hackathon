@@ -6,7 +6,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 
 /** Matches \\includegraphics in templates/cv-main.tex when no real photo is uploaded. */
@@ -20,12 +20,39 @@ const PLACEHOLDER_PNG = Buffer.from(
 
 export type LatexPdfEngine = "tectonic" | "pdflatex";
 
+/**
+ * Strip pdfTeX-only primitives that break XeTeX (tectonic).
+ * Keeps the template compilable under both engines.
+ */
+function patchForXetex(tex: string): string {
+  return tex
+    .replace(/^\\input\{glyphtounicode\}\s*$/m, "% (removed for XeTeX) \\input{glyphtounicode}")
+    .replace(/^\\pdfgentounicode\s*=\s*\d+\s*$/m, "% (removed for XeTeX) \\pdfgentounicode=1");
+}
+
+/**
+ * Resolve a command to an absolute path. Next.js Turbopack workers sometimes
+ * run with a stripped PATH, so ~/bin or /usr/local/bin may not be visible.
+ */
+function resolveCmd(name: string): string {
+  const candidates = [
+    join(homedir(), "bin", name),
+    `/usr/local/bin/${name}`,
+    `/opt/homebrew/bin/${name}`,
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) return p;
+  }
+  return name;
+}
+
 function runEngine(
   cmd: string,
   args: string[],
   cwd: string,
 ): { ok: true } | { ok: false; detail: string } {
-  const r = spawnSync(cmd, args, {
+  const resolved = resolveCmd(cmd);
+  const r = spawnSync(resolved, args, {
     cwd,
     encoding: "utf8",
     timeout: 120_000,
@@ -61,16 +88,21 @@ export function tryCompileLatexToPdf(
   const texPath = join(workDir, texName);
 
   try {
-    writeFileSync(texPath, texSource, "utf8");
     writeFileSync(join(workDir, PHOTO_FILENAME), PLACEHOLDER_PNG);
 
     const prefer = process.env.LATEX_PDF_ENGINE?.toLowerCase();
 
-    type Engine = { name: LatexPdfEngine; cmd: string; args: string[] };
+    type Engine = {
+      name: LatexPdfEngine;
+      cmd: string;
+      args: string[];
+      patch?: (src: string) => string;
+    };
     const tectonic: Engine = {
       name: "tectonic",
       cmd: "tectonic",
       args: [texName, "--outdir", workDir],
+      patch: patchForXetex,
     };
     const pdflatex: Engine = {
       name: "pdflatex",
@@ -86,25 +118,37 @@ export function tryCompileLatexToPdf(
     const order: Engine[] =
       prefer === "pdflatex" ? [pdflatex, tectonic] : [tectonic, pdflatex];
 
-    let lastErr = "";
-    for (const { name, cmd, args } of order) {
+    const errors: string[] = [];
+    for (const { name, cmd, args, patch } of order) {
+      const src = patch ? patch(texSource) : texSource;
+      writeFileSync(texPath, src, "utf8");
+
       const run = runEngine(cmd, args, workDir);
       if (!run.ok) {
-        lastErr = run.detail;
+        errors.push(`[${name}] ${run.detail}`);
         continue;
       }
       const pdfPath = join(workDir, pdfName);
       if (existsSync(pdfPath)) {
         return { pdf: readFileSync(pdfPath), engine: name };
       }
-      lastErr = "PDF file not produced after successful exit";
+      errors.push(`[${name}] PDF file not produced after successful exit`);
     }
 
     if (process.env.NODE_ENV === "development") {
       console.warn(
         "[latex-to-pdf] Compile failed, using plain PDF fallback:\n",
-        lastErr,
+        errors.join("\n---\n"),
       );
+      const debugPath = join(workDir, `${basename}-debug.tex`);
+      try {
+        const debugCopy = join(
+          process.cwd(),
+          `_debug-last-${basename}.tex`,
+        );
+        writeFileSync(debugCopy, texSource, "utf8");
+        console.warn("[latex-to-pdf] Saved failing source to:", debugCopy);
+      } catch { /* ignore */ }
     }
     return null;
   } finally {
