@@ -1,34 +1,53 @@
 @import "tailwindcss";
 
-:root {
-  --bg: #fafafa;
-  --fg: #0a0a0a;
-  --muted: #737373;
-  --border: #e5e5e5;
-  --card: #ffffff;
-  --sidebar: #f5f5f5;
-  --nav-active-bg: #e5e5e5;
-  --hover: #f0f0f0;
-  --code-bg: #f0f0f0;
-  --accent: #171717;
+@theme inline {
+  --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a0a0a;
-    --fg: #fafafa;
-    --muted: #a3a3a3;
-    --border: #262626;
-    --card: #171717;
-    --sidebar: #0f0f0f;
-    --nav-active-bg: #262626;
-    --hover: #1a1a1a;
-    --code-bg: #262626;
-    --accent: #fafafa;
-  }
+:root {
+  --bg: #0a0a0a;
+  --fg: #fafafa;
+  --muted: #737373;
+  --border: #262626;
+  --card: #111111;
+  --sidebar: #0a0a0a;
+  --nav-active-bg: #1a1a1a;
+  --hover: #1a1a1a;
+  --code-bg: #1a1a1a;
+  --accent: #00d4aa;
+  --accent-secondary: #00b894;
+  --accent-muted: rgba(0, 212, 170, 0.1);
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --destructive: #ef4444;
 }
 
 body {
   background: var(--bg);
   color: var(--fg);
+}
+
+/* Subtle grid background pattern */
+.grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glow effect for accent elements */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.15);
+}
+
+/* Status badge styles */
+.status-active {
+  color: var(--success);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.status-pending {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1);
 }
