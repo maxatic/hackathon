@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
+const DEFAULT_MODEL = "claude-haiku-4-5";
 
 /** Model id stored in generated_documents.meta and used for logging. */
 export function getResolvedModelName(): string {
@@ -23,6 +23,8 @@ function anthropicMessageText(msg: Anthropic.Messages.Message): string {
 
 export type GenerateJsonTextOptions = {
   temperature: number;
+  /** Defaults to JSON-only system prompt when omitted. */
+  system?: string;
 };
 
 /**
@@ -39,11 +41,15 @@ export async function generateJsonText(
   const model = getResolvedModelName();
   const client = new Anthropic({ apiKey });
   let msg: Anthropic.Messages.Message;
+  const system =
+    options.system ??
+    "You are a JSON API. Return ONLY valid JSON — no markdown fences, no commentary.";
   try {
     msg = await client.messages.create({
       model,
       max_tokens: 8192,
       temperature: options.temperature,
+      system,
       messages: [{ role: "user", content: prompt }],
     });
   } catch (err: unknown) {
@@ -54,6 +60,8 @@ export async function generateJsonText(
 
 export type GenerateJsonFromPdfOptions = {
   temperature: number;
+  /** Defaults to JSON-only system prompt when omitted. */
+  system?: string;
 };
 
 /**
@@ -71,11 +79,15 @@ export async function generateJsonFromPdf(
   const model = getResolvedModelName();
   const client = new Anthropic({ apiKey });
   let msg: Anthropic.Messages.Message;
+  const system =
+    options.system ??
+    "You are a JSON API. Return ONLY valid JSON — no markdown fences, no commentary.";
   try {
     msg = await client.messages.create({
       model,
       max_tokens: 8192,
       temperature: options.temperature,
+      system,
       messages: [
         {
           role: "user",

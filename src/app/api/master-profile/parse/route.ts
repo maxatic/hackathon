@@ -86,14 +86,13 @@ export async function POST(request: Request) {
   } catch (err: unknown) {
     const raw = err instanceof Error ? err.message : String(err);
     const status =
-      raw.includes("429") || raw.includes("quota") || raw.includes("Quota")
-        ? 429
-        : 502;
+      raw.includes("429") || raw.includes("rate_limit") ? 429 : 502;
     return NextResponse.json(
-      { error: `Anthropic error: ${raw.slice(0, 400)}` },
+      { error: `Claude error: ${raw.slice(0, 400)}` },
       { status },
     );
   }
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
@@ -120,10 +119,25 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
+
+  // Preserve photoStoragePath from the existing profile
+  const { data: existingRow } = await supabase
+    .from("master_profiles")
+    .select("profile")
+    .eq("user_id", auth.userId)
+    .maybeSingle();
+  const existingProfile = (existingRow?.profile ?? {}) as Record<string, unknown>;
+  const profileToSave = {
+    ...(structured as unknown as Record<string, unknown>),
+    ...(existingProfile.photoStoragePath
+      ? { photoStoragePath: existingProfile.photoStoragePath }
+      : {}),
+  };
+
   const { error: dbError } = await supabase
     .from("master_profiles")
     .upsert(
-      { user_id: auth.userId, profile: structured as unknown as Record<string, unknown> },
+      { user_id: auth.userId, profile: profileToSave },
       { onConflict: "user_id" },
     );
 

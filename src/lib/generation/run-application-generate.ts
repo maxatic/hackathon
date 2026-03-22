@@ -106,8 +106,34 @@ export async function runApplicationGenerate(params: {
   const cvLatex = generated.cv_latex.trim();
   const coverLatex = generated.cover_letter_latex.trim();
 
+  // Fetch user photo from Supabase Storage if available
+  let latexImages: Record<string, Buffer> | undefined;
+  const photoPath =
+    typeof masterProfile.photoStoragePath === "string"
+      ? masterProfile.photoStoragePath
+      : null;
+  if (photoPath) {
+    try {
+      const { data: photoData, error: photoErr } = await supabase.storage
+        .from("user-photos")
+        .download(photoPath);
+      if (photoErr) {
+        console.warn("[generate] Photo download error:", photoErr.message);
+      }
+      if (photoData) {
+        const buf = Buffer.from(await photoData.arrayBuffer());
+        console.log(`[generate] Photo loaded: ${buf.length} bytes from ${photoPath}`);
+        latexImages = { "cv-photo.png": buf };
+      }
+    } catch (e) {
+      console.warn("[generate] Photo fetch failed:", e instanceof Error ? e.message : e);
+    }
+  } else {
+    console.log("[generate] No photoStoragePath in profile, keys:", Object.keys(masterProfile));
+  }
+
   const cvCompiled =
-    cvLatex.length > 0 ? tryCompileLatexToPdf(cvLatex, "cv") : null;
+    cvLatex.length > 0 ? tryCompileLatexToPdf(cvLatex, "cv", latexImages) : null;
   const cvPdfBytes = cvCompiled
     ? cvCompiled.pdf
     : await textToPdfBytes({
@@ -117,7 +143,7 @@ export async function runApplicationGenerate(params: {
 
   const coverCompiled =
     coverLatex.length > 0
-      ? tryCompileLatexToPdf(coverLatex, "cover")
+      ? tryCompileLatexToPdf(coverLatex, "cover", latexImages)
       : null;
   const coverPdfBytes = coverCompiled
     ? coverCompiled.pdf

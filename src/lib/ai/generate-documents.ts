@@ -68,6 +68,7 @@ export async function generateDocuments(
   const text = await generateJsonText(buildPrompt(input), {
     temperature: 0.35,
   });
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);

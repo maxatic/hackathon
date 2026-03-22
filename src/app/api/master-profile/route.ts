@@ -77,10 +77,25 @@ export async function PUT(request: Request) {
         : true;
 
     const supabase = createAdminClient();
+
+    // Preserve photoStoragePath from the existing profile so that
+    // saving form fields doesn't wipe out a previously uploaded photo.
+    const { data: existing } = await supabase
+      .from("master_profiles")
+      .select("profile")
+      .eq("user_id", auth.userId)
+      .maybeSingle();
+
+    const existingProfile = (existing?.profile ?? {}) as Record<string, unknown>;
+    const merged = { ...profile };
+    if (!merged.photoStoragePath && existingProfile.photoStoragePath) {
+      merged.photoStoragePath = existingProfile.photoStoragePath;
+    }
+
     const { data, error } = await supabase
       .from("master_profiles")
       .upsert(
-        { user_id: auth.userId, profile },
+        { user_id: auth.userId, profile: merged },
         { onConflict: "user_id" },
       )
       .select("user_id, profile, updated_at")
