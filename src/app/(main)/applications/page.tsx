@@ -58,7 +58,7 @@ export default function ApplicationsPage() {
         </div>
         <Link
           href="/applications/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-[var(--bg)] transition-all hover:opacity-90"
+          className="inline-flex items-center gap-2 border border-[var(--fg)] bg-[var(--fg)] px-4 py-2 text-sm font-medium text-[var(--bg)] transition-colors hover:bg-transparent hover:text-[var(--fg)]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -77,7 +77,7 @@ export default function ApplicationsPage() {
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--card)] px-6 py-16 text-center">
           <p className="text-[var(--muted)]">
             No applications yet.{" "}
-            <Link href="/applications/new" className="font-medium text-[var(--accent)] hover:underline">
+            <Link href="/applications/new" className="font-medium text-[var(--fg)] underline underline-offset-4">
               Create your first one
             </Link>
           </p>
@@ -88,7 +88,7 @@ export default function ApplicationsPage() {
             <Link
               key={app.id}
               href={`/applications/${app.id}`}
-              className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--card)] px-5 py-4 transition-colors hover:border-[var(--accent)]/30"
+              className="flex items-center justify-between border border-[var(--border)] px-5 py-4 transition-colors hover:bg-[var(--hover)]"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-[var(--fg)]">{app.role_title}</p>

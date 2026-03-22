@@ -283,7 +283,7 @@ export function MasterCvEditor() {
   }
 
   const inputClass =
-    "mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]";
+    "mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--fg)]";
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -312,7 +312,7 @@ export function MasterCvEditor() {
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={busy}
-            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--fg)] transition-colors hover:border-[var(--accent)]/30 disabled:opacity-50"
+            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--fg)] transition-colors hover:bg-[var(--hover)] disabled:opacity-50"
           >
             {parsing ? "Parsing CV…" : "Upload PDF"}
           </button>
@@ -320,7 +320,7 @@ export function MasterCvEditor() {
             type="button"
             onClick={save}
             disabled={busy}
-            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--fg)] transition-colors hover:border-[var(--accent)]/30 disabled:opacity-50"
+            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--fg)] transition-colors hover:bg-[var(--hover)] disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -328,7 +328,7 @@ export function MasterCvEditor() {
             type="button"
             onClick={generate}
             disabled={busy}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--bg)] transition-all hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 border border-[var(--fg)] bg-[var(--fg)] px-4 py-2 text-sm font-medium text-[var(--bg)] transition-colors hover:bg-transparent hover:text-[var(--fg)] disabled:opacity-50"
           >
             {generating ? (
               <>
@@ -377,7 +377,7 @@ export function MasterCvEditor() {
               href={pdfLinks.cv}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--accent)] underline underline-offset-4"
+              className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
             >
               Open CV (PDF)
             </a>
@@ -387,7 +387,7 @@ export function MasterCvEditor() {
               href={pdfLinks.coverLetter}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--accent)] underline underline-offset-4"
+              className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
             >
               Open cover letter (PDF)
             </a>

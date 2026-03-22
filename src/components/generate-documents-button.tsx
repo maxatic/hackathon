@@ -81,7 +81,7 @@ export function GenerateDocumentsButton({ applicationId }: Props) {
         type="button"
         onClick={run}
         disabled={status === "loading"}
-        className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--bg)] disabled:opacity-60"
+        className="border border-[var(--fg)] bg-[var(--fg)] px-4 py-2 text-sm font-medium text-[var(--bg)] transition-colors hover:bg-transparent hover:text-[var(--fg)] disabled:opacity-60"
       >
         {status === "loading" ? "Generating…" : "Generate CV + Anschreiben (AI)"}
       </button>

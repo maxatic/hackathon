@@ -71,7 +71,7 @@ export async function generateDocuments(
   }
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const modelName = process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash";
+  const modelName = process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash-lite";
   const model = genAI.getGenerativeModel({
     model: modelName,
   });

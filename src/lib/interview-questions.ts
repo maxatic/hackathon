@@ -6,6 +6,8 @@ export interface PMQuestion {
   difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   estimatedTime: string;
   promptContext: string;
+  /** When true, topic is visible but not selectable yet (coming soon). */
+  locked?: boolean;
 }
 
 export const interviewQuestions: PMQuestion[] = [
@@ -28,6 +30,7 @@ export const interviewQuestions: PMQuestion[] = [
     difficulty: "ADVANCED",
     estimatedTime: "20-25 min",
     promptContext: "Product design question about remote collaboration tools",
+    locked: true,
   },
   {
     id: "metrics-analytics",
@@ -38,6 +41,7 @@ export const interviewQuestions: PMQuestion[] = [
     difficulty: "INTERMEDIATE",
     estimatedTime: "15-20 min",
     promptContext: "Metrics and analytics question about Uber Eats",
+    locked: true,
   },
 ];
 

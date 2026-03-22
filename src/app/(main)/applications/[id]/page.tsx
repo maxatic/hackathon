@@ -23,12 +23,12 @@ type Document = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-400/20 text-gray-400",
-  applied: "bg-blue-400/20 text-blue-400",
-  interview: "bg-yellow-400/20 text-yellow-400",
-  offer: "bg-green-400/20 text-green-400",
-  rejected: "bg-red-400/20 text-red-400",
-  withdrawn: "bg-gray-400/20 text-gray-500",
+  draft: "bg-neutral-100 text-neutral-500",
+  applied: "bg-neutral-100 text-neutral-700",
+  interview: "bg-neutral-200 text-neutral-800",
+  offer: "bg-neutral-900 text-white",
+  rejected: "bg-neutral-100 text-neutral-400",
+  withdrawn: "bg-neutral-100 text-neutral-400",
 };
 
 const KIND_LABELS: Record<string, string> = {
@@ -98,7 +98,7 @@ export default function ApplicationDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--accent)]" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--fg)]" />
       </div>
     );
   }
@@ -107,7 +107,7 @@ export default function ApplicationDetailPage() {
     return (
       <div className="py-24 text-center">
         <p className="text-[var(--muted)]">{error ?? "Application not found."}</p>
-        <Link href="/applications" className="mt-4 inline-block text-sm font-medium text-[var(--accent)] hover:underline">
+        <Link href="/applications" className="mt-4 inline-block text-sm font-medium text-[var(--fg)] underline underline-offset-4">
           Back to applications
         </Link>
       </div>
@@ -156,7 +156,7 @@ export default function ApplicationDetailPage() {
             type="button"
             onClick={regenerate}
             disabled={regenerating}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--bg)] transition-all hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 border border-[var(--fg)] bg-[var(--fg)] px-4 py-2 text-sm font-medium text-[var(--bg)] transition-colors hover:bg-transparent hover:text-[var(--fg)] disabled:opacity-50"
           >
             {regenerating ? (
               <>
@@ -177,12 +177,12 @@ export default function ApplicationDetailPage() {
         {regenLinks && (
           <div className="mb-4 flex flex-wrap gap-3">
             {regenLinks.cv && (
-              <a href={regenLinks.cv} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-green-500/10 px-4 py-2 text-sm font-medium text-green-400 hover:bg-green-500/20">
+              <a href={regenLinks.cv} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 border border-[var(--fg)] px-4 py-2 text-sm font-medium text-[var(--fg)] hover:bg-[var(--hover)]">
                 Open new CV
               </a>
             )}
             {regenLinks.coverLetter && (
-              <a href={regenLinks.coverLetter} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg bg-green-500/10 px-4 py-2 text-sm font-medium text-green-400 hover:bg-green-500/20">
+              <a href={regenLinks.coverLetter} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--fg)] hover:bg-[var(--hover)]">
                 Open new Cover Letter
               </a>
             )}
@@ -213,7 +213,7 @@ export default function ApplicationDetailPage() {
                     href={signedUrls[doc.id]}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-[var(--accent)] hover:underline"
+                    className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
                   >
                     Open PDF
                   </a>

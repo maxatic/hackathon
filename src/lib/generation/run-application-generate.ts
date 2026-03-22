@@ -157,7 +157,7 @@ export async function runApplicationGenerate(params: {
   }
 
   const metaBase = {
-    model: process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash",
+    model: process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash-lite",
     locale: app.locale,
   };
 

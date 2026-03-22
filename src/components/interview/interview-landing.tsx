@@ -17,9 +17,13 @@ export function InterviewLanding() {
         </p>
       </section>
 
-      <section>
+      <section className="space-y-6">
         <SectionLabel number="02" text="QUESTION CATEGORIES" />
         <QuestionGrid />
+        <p className="max-w-lg text-xs leading-relaxed text-[var(--muted)]">
+          Only the first topic is available for now. We&apos;re going to add the
+          rest of the topics soon—check back shortly.
+        </p>
       </section>
     </div>
   );

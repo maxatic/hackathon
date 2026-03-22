@@ -83,6 +83,29 @@ function InterviewSession({ questionId }: { questionId: string }) {
     );
   }
 
+  if (question.locked) {
+    return (
+      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-4 py-12 text-center">
+        <p className="text-xs uppercase tracking-widest text-[var(--muted)]">
+          Coming soon
+        </p>
+        <h1 className="mt-3 max-w-md text-xl font-semibold tracking-tight text-[var(--fg)]">
+          {question.title}
+        </h1>
+        <p className="mt-4 max-w-md text-sm leading-relaxed text-[var(--muted)]">
+          This topic isn&apos;t available yet. We&apos;re going to add the rest
+          of the topics soon—pick an unlocked challenge from the list.
+        </p>
+        <Link
+          href="/interview"
+          className="mt-8 text-xs tracking-widest text-[var(--fg)] underline underline-offset-4 hover:text-[var(--muted)]"
+        >
+          &larr; BACK TO QUESTIONS
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col px-4 py-8 md:py-12">
       <Link

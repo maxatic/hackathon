@@ -37,7 +37,7 @@ export function AppNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex flex-col gap-1" aria-label="Main">
+    <nav className="flex flex-col gap-0.5" aria-label="Main">
       {mainNav.map((item) => {
         const active =
           pathname === item.href ||
@@ -46,13 +46,13 @@ export function AppNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+            className={`group flex items-center gap-3 px-3 py-2 text-sm font-medium transition-colors ${
               active
-                ? "bg-[var(--accent-muted)] text-[var(--accent)] border border-[var(--accent)]/20"
-                : "text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--fg)] border border-transparent"
+                ? "bg-[var(--nav-active-bg)] text-[var(--fg)]"
+                : "text-[var(--muted)] hover:bg-[var(--hover)] hover:text-[var(--fg)]"
             }`}
           >
-            <span className={`transition-colors ${active ? "text-[var(--accent)]" : "text-[var(--muted)] group-hover:text-[var(--fg)]"}`}>
+            <span className={`transition-colors ${active ? "text-[var(--fg)]" : "text-[var(--muted)] group-hover:text-[var(--fg)]"}`}>
               {navIcons[item.href]}
             </span>
             {item.label}

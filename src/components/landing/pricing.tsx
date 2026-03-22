@@ -16,7 +16,6 @@ const plans = [
     monthlyPrice: 0,
     annuallyPrice: 0,
     badge: null,
-    featured: false,
     cta: 'Start Free',
     features: [
       '3 tailored Node-CVs per month',
@@ -33,7 +32,6 @@ const plans = [
     monthlyPrice: 19.9,
     annuallyPrice: 155,
     badge: 'Most Popular',
-    featured: true,
     cta: 'Go Pro',
     features: [
       'Unlimited tailored Node-CVs',
@@ -53,7 +51,6 @@ const plans = [
     monthlyPrice: 39.9,
     annuallyPrice: 311,
     badge: null,
-    featured: false,
     cta: 'Go Premium',
     features: [
       'Everything in Pro',
@@ -71,14 +68,7 @@ function PlanCard({ plan, billPlan }: { plan: typeof plans[0]; billPlan: BillPla
   const price = billPlan === 'monthly' ? plan.monthlyPrice : plan.annuallyPrice
 
   return (
-    <div
-      className={cn(
-        'flex flex-col relative border overflow-hidden transition-all',
-        plan.featured
-          ? 'bg-foreground text-background border-foreground'
-          : 'bg-background text-foreground border-border'
-      )}
-    >
+    <div className="flex flex-col relative border overflow-hidden transition-all bg-white text-foreground border-border">
       {plan.badge && (
         <div className="absolute top-4 right-4 text-[10px] font-mono px-2 py-0.5 bg-background text-foreground border border-border">
           {plan.badge}
@@ -86,7 +76,7 @@ function PlanCard({ plan, billPlan }: { plan: typeof plans[0]; billPlan: BillPla
       )}
 
       <div className="p-6 pb-4">
-        <p className={cn('text-[10px] font-mono tracking-widest uppercase mb-4', plan.featured ? 'text-background/60' : 'text-muted-foreground')}>
+        <p className="text-[10px] font-mono tracking-widest uppercase mb-4 text-muted-foreground">
           {plan.name}
         </p>
         <div className="flex items-baseline gap-1">
@@ -100,23 +90,23 @@ function PlanCard({ plan, billPlan }: { plan: typeof plans[0]; billPlan: BillPla
                 className="text-4xl font-mono font-bold"
                 format={{ minimumFractionDigits: 0, maximumFractionDigits: 0 }}
               />
-              <span className={cn('text-xs font-mono ml-1', plan.featured ? 'text-background/60' : 'text-muted-foreground')}>
+              <span className="text-xs font-mono ml-1 text-muted-foreground">
                 {billPlan === 'monthly' ? '/mo' : '/yr'}
               </span>
             </>
           )}
         </div>
         {!isFree && billPlan === 'monthly' && (
-          <p className={cn('text-[10px] font-mono mt-1', plan.featured ? 'text-background/50' : 'text-muted-foreground/60')}>
+          <p className="text-[10px] font-mono mt-1 text-muted-foreground/60">
             or €{plan.annuallyPrice}/yr billed annually
           </p>
         )}
         {!isFree && billPlan === 'annually' && (
-          <p className={cn('text-[10px] font-mono mt-1', plan.featured ? 'text-background/50' : 'text-muted-foreground/60')}>
+          <p className="text-[10px] font-mono mt-1 text-muted-foreground/60">
             saves €{Math.round(plan.monthlyPrice * 12 - plan.annuallyPrice)} vs monthly
           </p>
         )}
-        <p className={cn('text-xs mt-3 leading-relaxed', plan.featured ? 'text-background/70' : 'text-muted-foreground')}>
+        <p className="text-xs mt-3 leading-relaxed text-muted-foreground">
           {plan.description}
         </p>
       </div>
@@ -124,12 +114,7 @@ function PlanCard({ plan, billPlan }: { plan: typeof plans[0]; billPlan: BillPla
       <div className="px-6 pb-4">
         <a
           href="#"
-          className={cn(
-            'flex items-center justify-center h-9 w-full text-sm font-mono font-medium transition-opacity hover:opacity-80',
-            plan.featured
-              ? 'bg-background text-foreground'
-              : 'border border-border text-foreground hover:bg-foreground/5'
-          )}
+          className="flex items-center justify-center h-9 w-full text-sm font-mono font-medium transition-opacity hover:opacity-80 border border-border text-foreground hover:bg-foreground/5"
         >
           {plan.cta}
         </a>
@@ -141,7 +126,7 @@ function PlanCard({ plan, billPlan }: { plan: typeof plans[0]; billPlan: BillPla
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
-              className={cn('text-[10px] font-mono text-center', plan.featured ? 'text-background/50' : 'text-muted-foreground/60')}
+              className="text-[10px] font-mono text-center text-muted-foreground/60"
             >
               {isFree ? 'No credit card required' : billPlan === 'monthly' ? 'Billed monthly' : 'Billed in one annual payment'}
             </motion.p>
@@ -149,19 +134,19 @@ function PlanCard({ plan, billPlan }: { plan: typeof plans[0]; billPlan: BillPla
         </div>
       </div>
 
-      <div className={cn('h-px mx-6', plan.featured ? 'bg-background/20' : 'bg-border')} />
+      <div className="h-px mx-6 bg-border" />
 
       <ul className="flex flex-col gap-2.5 p-6">
-        <li className={cn('text-[10px] font-mono tracking-widest uppercase mb-1', plan.featured ? 'text-background/50' : 'text-muted-foreground/60')}>
+        <li className="text-[10px] font-mono tracking-widest uppercase mb-1 text-muted-foreground/60">
           Includes
         </li>
         {plan.features.map((f) => (
           <li key={f} className="flex items-start gap-2.5 text-xs">
             <Check
               size={12}
-              className={cn('mt-0.5 shrink-0', plan.featured ? 'text-background/70' : 'text-muted-foreground')}
+              className="mt-0.5 shrink-0 text-muted-foreground"
             />
-            <span className={plan.featured ? 'text-background/80' : 'text-muted-foreground'}>
+            <span className="text-muted-foreground">
               {f}
             </span>
           </li>

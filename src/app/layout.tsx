@@ -1,12 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import type { Metadata } from "next";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-const jetbrainsMono = JetBrains_Mono({ 
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-mono"
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +21,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${inter.className} ${jetbrainsMono.variable} min-h-screen antialiased`}>{children}</body>
+        <body className={`${geistMono.className} min-h-screen antialiased`}>{children}</body>
       </html>
     </ClerkProvider>
   );
