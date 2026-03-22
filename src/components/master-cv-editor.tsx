@@ -1,19 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
+import { MasterCvChat } from "@/components/master-cv-chat";
+import {
+  type ProfileFields,
+  fieldsToProfile,
+  mergeProfilePatch,
+} from "@/lib/master-cv-fields";
 import { parseFetchJson } from "@/lib/parse-fetch-json";
-
-type ProfileFields = {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  summary: string;
-  skills: string;
-  experience: string;
-  education: string;
-  languages: string;
-};
 
 const empty: ProfileFields = {
   fullName: "",
@@ -88,24 +82,6 @@ function structuredToFields(p: Record<string, unknown>): ProfileFields {
   };
 }
 
-function fieldsToProfile(f: ProfileFields): Record<string, unknown> {
-  const skills = f.skills
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return {
-    fullName: f.fullName.trim(),
-    email: f.email.trim(),
-    phone: f.phone.trim(),
-    location: f.location.trim(),
-    summary: f.summary.trim(),
-    skills,
-    experience: f.experience.trim(),
-    education: f.education.trim(),
-    languages: f.languages.trim(),
-  };
-}
-
 type SaveResponse = {
   updated_at?: string | null;
   error?: string;
@@ -131,6 +107,7 @@ export function MasterCvEditor() {
     cv: string | null;
     coverLetter: string | null;
   } | null>(null);
+  const [previewTab, setPreviewTab] = useState<"cv" | "cover">("cv");
   const [notice, setNotice] = useState<{ type: "ok" | "err" | "warn"; text: string } | null>(
     null,
   );
@@ -141,6 +118,26 @@ export function MasterCvEditor() {
   const photoRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
   const busy = saving || generating || parsing || uploadingPhoto;
+
+  const refetchPreview = useCallback(async () => {
+    try {
+      const res = await fetch("/api/master-profile/preview", {
+        credentials: "include",
+      });
+      const data = (await parseFetchJson(res)) as {
+        cv?: string | null;
+        coverLetter?: string | null;
+        error?: string;
+      };
+      if (!res.ok) return;
+      setPdfLinks({
+        cv: data.cv ?? null,
+        coverLetter: data.coverLetter ?? null,
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -167,6 +164,7 @@ export function MasterCvEditor() {
           .then((d) => { if (d.url) setPhotoUrl(d.url); })
           .catch(() => {});
       }
+      await refetchPreview();
     } catch (e) {
       setNotice({
         type: "err",
@@ -175,7 +173,7 @@ export function MasterCvEditor() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [refetchPreview]);
 
   useEffect(() => {
     load();
@@ -184,7 +182,6 @@ export function MasterCvEditor() {
   async function save() {
     setSaving(true);
     setNotice(null);
-    setPdfLinks(null);
     try {
       const profile = fieldsToProfile(fields);
       const res = await fetch("/api/master-profile", {
@@ -200,6 +197,7 @@ export function MasterCvEditor() {
       }
       setUpdatedAt(data.updated_at ?? new Date().toISOString());
       setNotice({ type: "ok", text: "Profile saved." });
+      await refetchPreview();
     } catch (e) {
       setNotice({ type: "err", text: e instanceof Error ? e.message : "Save failed" });
     } finally {
@@ -242,6 +240,7 @@ export function MasterCvEditor() {
       setNotice({ type: "err", text: e instanceof Error ? e.message : "Generation failed" });
     } finally {
       setGenerating(false);
+      void refetchPreview();
     }
   }
 
@@ -340,8 +339,21 @@ export function MasterCvEditor() {
   const inputClass =
     "mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--fg)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--fg)]";
 
+  const activePreviewUrl =
+    previewTab === "cv" ? pdfLinks?.cv ?? null : pdfLinks?.coverLetter ?? null;
+  const cvTabActive =
+    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors " +
+    (previewTab === "cv"
+      ? "bg-[var(--card)] text-[var(--fg)] shadow-sm"
+      : "text-[var(--muted)] hover:text-[var(--fg)]");
+  const coverTabActive =
+    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors " +
+    (previewTab === "cover"
+      ? "bg-[var(--card)] text-[var(--fg)] shadow-sm"
+      : "text-[var(--muted)] hover:text-[var(--fg)]");
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-[var(--fg)]">
@@ -417,31 +429,72 @@ export function MasterCvEditor() {
         </p>
       ) : null}
 
-      {pdfLinks ? (
-        <div className="flex flex-wrap gap-3">
-          {pdfLinks.cv ? (
-            <a
-              href={pdfLinks.cv}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
+      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(280px,380px)] lg:items-start">
+        <div className="min-w-0 space-y-6">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+        <div className="flex flex-col gap-3 border-b border-[var(--border)] pb-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <div className="flex gap-1 rounded-lg bg-[var(--border)]/30 p-0.5">
+            <button
+              type="button"
+              onClick={() => setPreviewTab("cv")}
+              className={cvTabActive}
             >
-              Open CV (PDF)
-            </a>
-          ) : null}
-          {pdfLinks.coverLetter ? (
-            <a
-              href={pdfLinks.coverLetter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
+              CV
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewTab("cover")}
+              className={coverTabActive}
             >
-              Open cover letter (PDF)
-            </a>
-          ) : null}
+              Cover letter
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {pdfLinks?.cv ? (
+              <a
+                href={pdfLinks.cv}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
+              >
+                Open CV in new tab
+              </a>
+            ) : null}
+            {pdfLinks?.coverLetter ? (
+              <a
+                href={pdfLinks.coverLetter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-[var(--fg)] underline underline-offset-4"
+              >
+                Open cover letter in new tab
+              </a>
+            ) : null}
+          </div>
         </div>
-      ) : null}
+        <div className="mt-4 min-h-[min(70vh,800px)]">
+          {!pdfLinks || (!pdfLinks.cv && !pdfLinks.coverLetter) ? (
+            <p className="text-sm text-[var(--muted)]">
+              No PDFs yet — click Generate CV to create your documents.
+            </p>
+          ) : activePreviewUrl ? (
+            <iframe
+              key={activePreviewUrl}
+              title={previewTab === "cv" ? "CV preview" : "Cover letter preview"}
+              src={activePreviewUrl}
+              className="h-[min(70vh,800px)] w-full rounded-lg border border-[var(--border)] bg-white dark:bg-zinc-950"
+            />
+          ) : (
+            <p className="text-sm text-[var(--muted)]">
+              {previewTab === "cv"
+                ? "No CV PDF yet — generate to create one."
+                : "No cover letter PDF yet — generate to create one."}
+            </p>
+          )}
+        </div>
+      </div>
 
+      <div className="mx-auto max-w-2xl w-full space-y-6">
       {/* Dropzone + Photo upload */}
       <div className="flex gap-4">
         {/* CV Dropzone */}
@@ -608,6 +661,18 @@ export function MasterCvEditor() {
           placeholder="German (native), English (C1), …"
         />
       </label>
+      </div>
+        </div>
+        <aside className="lg:sticky lg:top-4 h-fit">
+          <MasterCvChat
+            fields={fields}
+            disabled={busy}
+            onApplyPatch={(patch) =>
+              setFields((prev) => mergeProfilePatch(prev, patch))
+            }
+          />
+        </aside>
+      </div>
     </div>
   );
 }

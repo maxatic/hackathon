@@ -64,7 +64,7 @@ Fill in the required keys:
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key |
 | `ANTHROPIC_API_KEY` | Yes | Anthropic API key (Claude — CV/cover generation & PDF parsing) |
-| `ANTHROPIC_MODEL` | No | Override model (default: `claude-3-5-haiku-20241022`) |
+| `ANTHROPIC_MODEL` | No | Override model (default: `claude-haiku-4-5`; legacy `claude-3-5-haiku-20241022` is remapped) |
 | `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` | No | ElevenLabs agent ID for voice interviews |
 | `DISABLE_LATEX_PDF` | No | Set `1` to skip LaTeX compilation |
 | `LATEX_PDF_ENGINE` | No | `tectonic` or `pdflatex` |
