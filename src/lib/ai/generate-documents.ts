@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import {
   CV_STRUCTURED_SCHEMA,
   buildCvLatexFromStructured,
@@ -65,42 +65,44 @@ Rules:
 export async function generateDocuments(
   input: GenerateInput,
 ): Promise<GeneratedPair> {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error("Missing GOOGLE_GENERATIVE_AI_API_KEY");
+    throw new Error("Missing ANTHROPIC_API_KEY");
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const modelName = process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash-lite";
-  const model = genAI.getGenerativeModel({
-    model: modelName,
-  });
+  const modelName = process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5";
+  const client = new Anthropic({ apiKey });
 
-  let result;
+  let message;
   try {
-    result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: buildPrompt(input) }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.35,
-      },
+    message = await client.messages.create({
+      model: modelName,
+      max_tokens: 8192,
+      messages: [{ role: "user", content: buildPrompt(input) }],
+      system: "You are a JSON API. Return ONLY valid JSON — no markdown fences, no commentary.",
+      temperature: 0.35,
     });
   } catch (err: unknown) {
     const raw = err instanceof Error ? err.message : String(err);
-    if (
-      raw.includes("429") ||
-      raw.includes("Too Many Requests") ||
-      raw.includes("quota") ||
-      raw.includes("Quota")
-    ) {
+    if (raw.includes("429") || raw.includes("rate_limit")) {
       throw new Error(
-        `Gemini quota or rate limit (${modelName}). Wait 1–2 minutes and try again. If this persists, open Google AI Studio → enable billing or create a new API key, or set GOOGLE_AI_MODEL in .env.local to another model (see .env.example). Raw: ${raw.slice(0, 400)}`,
+        `Claude rate limit (${modelName}). Wait a moment and try again. Raw: ${raw.slice(0, 400)}`,
       );
     }
     throw err;
   }
 
-  const text = result.response.text();
+  const textBlock = message.content.find((b) => b.type === "text");
+  if (!textBlock || textBlock.type !== "text") {
+    throw new Error("Claude returned no text content");
+  }
+
+  let text = textBlock.text.trim();
+  // Strip markdown fences if Claude wraps the JSON
+  if (text.startsWith("```")) {
+    text = text.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
+  }
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);

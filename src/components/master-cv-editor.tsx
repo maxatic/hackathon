@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
 import { parseFetchJson } from "@/lib/parse-fetch-json";
 
 type ProfileFields = {
@@ -134,8 +134,13 @@ export function MasterCvEditor() {
   const [notice, setNotice] = useState<{ type: "ok" | "err" | "warn"; text: string } | null>(
     null,
   );
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const busy = saving || generating || parsing;
+  const photoRef = useRef<HTMLInputElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
+  const busy = saving || generating || parsing || uploadingPhoto;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -156,6 +161,12 @@ export function MasterCvEditor() {
         : {};
       setFields(profileToFields(raw));
       setUpdatedAt(data.updated_at ?? null);
+      if (typeof raw.photoStoragePath === "string") {
+        fetch("/api/master-profile/photo", { credentials: "include" })
+          .then((r) => r.json())
+          .then((d) => { if (d.url) setPhotoUrl(d.url); })
+          .catch(() => {});
+      }
     } catch (e) {
       setNotice({
         type: "err",
@@ -247,6 +258,7 @@ export function MasterCvEditor() {
       });
       const data = (await parseFetchJson(res)) as {
         profile?: Record<string, unknown>;
+        photoUrl?: string;
         error?: string;
       };
       if (!res.ok) {
@@ -256,6 +268,7 @@ export function MasterCvEditor() {
       if (data.profile && typeof data.profile === "object") {
         setFields(structuredToFields(data.profile));
         setUpdatedAt(new Date().toISOString());
+        if (data.photoUrl) setPhotoUrl(data.photoUrl);
         setNotice({
           type: "ok",
           text: "CV parsed and saved. Review the fields below, then click Save if you make edits.",
@@ -269,6 +282,48 @@ export function MasterCvEditor() {
     } finally {
       setParsing(false);
       if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  function onDragOver(e: DragEvent) {
+    e.preventDefault();
+    setDragging(true);
+  }
+  function onDragLeave(e: DragEvent) {
+    if (dropRef.current && !dropRef.current.contains(e.relatedTarget as Node)) {
+      setDragging(false);
+    }
+  }
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file?.type === "application/pdf") handleUpload(file);
+  }
+
+  async function handlePhotoUpload(file: File) {
+    setUploadingPhoto(true);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/master-profile/photo", {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      });
+      const data = (await parseFetchJson(res)) as { url?: string; error?: string };
+      if (!res.ok) {
+        setNotice({ type: "err", text: data.error ?? "Photo upload failed" });
+        return;
+      }
+      if (data.url) setPhotoUrl(data.url);
+      setNotice({ type: "ok", text: "Photo uploaded." });
+    } catch (e) {
+      setNotice({ type: "err", text: e instanceof Error ? e.message : "Photo upload failed" });
+    } finally {
+      setUploadingPhoto(false);
+      if (photoRef.current) photoRef.current.value = "";
     }
   }
 
@@ -308,14 +363,6 @@ export function MasterCvEditor() {
               if (file) handleUpload(file);
             }}
           />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={busy}
-            className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--fg)] transition-colors hover:bg-[var(--hover)] disabled:opacity-50"
-          >
-            {parsing ? "Parsing CV…" : "Upload PDF"}
-          </button>
           <button
             type="button"
             onClick={save}
@@ -394,6 +441,80 @@ export function MasterCvEditor() {
           ) : null}
         </div>
       ) : null}
+
+      {/* Dropzone + Photo upload */}
+      <div className="flex gap-4">
+        {/* CV Dropzone */}
+        <div
+          ref={dropRef}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => !busy && fileRef.current?.click()}
+          className={`relative flex-1 cursor-pointer rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors ${
+            dragging
+              ? "border-[var(--accent)] bg-[var(--accent)]/5"
+              : "border-[var(--border)] hover:border-[var(--accent)]/40"
+          } ${busy ? "pointer-events-none opacity-50" : ""}`}
+        >
+          {parsing ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--border)] border-t-[var(--accent)]" />
+              <p className="text-sm font-medium text-[var(--fg)]">Parsing your CV…</p>
+              <p className="text-xs text-[var(--muted)]">AI is extracting your profile data</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <svg className="h-8 w-8 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <p className="text-sm font-medium text-[var(--fg)]">
+                Drop your CV here or click to browse
+              </p>
+              <p className="text-xs text-[var(--muted)]">PDF only — AI will extract your profile data</p>
+            </div>
+          )}
+        </div>
+
+        {/* Photo upload */}
+        <input
+          ref={photoRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handlePhotoUpload(file);
+          }}
+        />
+        <div
+          onClick={() => !busy && photoRef.current?.click()}
+          className={`flex w-32 shrink-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed transition-colors ${
+            "border-[var(--border)] hover:border-[var(--accent)]/40"
+          } ${busy ? "pointer-events-none opacity-50" : ""}`}
+        >
+          {uploadingPhoto ? (
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
+          ) : photoUrl ? (
+            <>
+              <img
+                src={photoUrl}
+                alt="Your photo"
+                className="h-16 w-16 rounded-full border border-[var(--border)] object-cover"
+              />
+              <p className="text-xs text-[var(--muted)]">Change photo</p>
+            </>
+          ) : (
+            <>
+              <svg className="h-6 w-6 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+              <p className="text-xs text-[var(--muted)]">Add photo</p>
+              <p className="text-[10px] text-[var(--muted)]">Optional</p>
+            </>
+          )}
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block text-sm">

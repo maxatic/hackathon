@@ -25,7 +25,7 @@ export async function GET() {
       clerkSecretKeySet: Boolean(process.env.CLERK_SECRET_KEY),
       supabaseUrlSet: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL),
       supabaseServiceRoleSet: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-      googleAiKeySet: Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
+      anthropicApiKeySet: Boolean(process.env.ANTHROPIC_API_KEY),
     },
     latexPdf: latexDisabled
       ? { disabled: true as const, note: "DISABLE_LATEX_PDF=1" }

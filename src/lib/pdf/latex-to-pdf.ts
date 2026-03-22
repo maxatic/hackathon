@@ -85,6 +85,7 @@ function runEngine(
 export function tryCompileLatexToPdf(
   texSource: string,
   basename: string,
+  images?: Record<string, Buffer>,
 ): { pdf: Uint8Array; engine: LatexPdfEngine } | null {
   if (process.env.DISABLE_LATEX_PDF === "1") {
     return null;
@@ -96,6 +97,19 @@ export function tryCompileLatexToPdf(
   const texPath = join(workDir, texName);
 
   try {
+    // Write provided images under their given name AND with alternate
+    // extensions (.png / .jpg) so the engine finds the file regardless
+    // of the extension used in \includegraphics.
+    if (images) {
+      for (const [name, buf] of Object.entries(images)) {
+        const base = name.replace(/\.\w+$/, "");
+        writeFileSync(join(workDir, `${base}.png`), buf);
+        writeFileSync(join(workDir, `${base}.jpg`), buf);
+        writeFileSync(join(workDir, `${base}.jpeg`), buf);
+        writeFileSync(join(workDir, name), buf);
+        console.log(`[latex-to-pdf] Wrote photo ${name} (${buf.length} bytes) as ${base}.{png,jpg,jpeg}`);
+      }
+    }
     for (const img of extractImageFilenames(texSource)) {
       const imgPath = join(workDir, img);
       if (!existsSync(imgPath)) writeFileSync(imgPath, PLACEHOLDER_PNG);
@@ -141,7 +155,9 @@ export function tryCompileLatexToPdf(
       }
       const pdfPath = join(workDir, pdfName);
       if (existsSync(pdfPath)) {
-        return { pdf: readFileSync(pdfPath), engine: name };
+        const pdfBytes = readFileSync(pdfPath);
+        console.log(`[latex-to-pdf] ${basename} compiled OK with ${name} (${pdfBytes.length} bytes)`);
+        return { pdf: pdfBytes, engine: name };
       }
       errors.push(`[${name}] PDF file not produced after successful exit`);
     }

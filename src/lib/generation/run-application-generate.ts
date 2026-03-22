@@ -83,7 +83,7 @@ export async function runApplicationGenerate(params: {
       message.includes("quota") ||
       message.includes("Quota") ||
       message.includes("rate limit");
-    const status = message.includes("Missing GOOGLE_GENERATIVE_AI_API_KEY")
+    const status = message.includes("Missing ANTHROPIC_API_KEY")
       ? 503
       : isQuota
         ? 429
@@ -105,8 +105,34 @@ export async function runApplicationGenerate(params: {
   const cvLatex = generated.cv_latex.trim();
   const coverLatex = generated.cover_letter_latex.trim();
 
+  // Fetch user photo from Supabase Storage if available
+  let latexImages: Record<string, Buffer> | undefined;
+  const photoPath =
+    typeof masterProfile.photoStoragePath === "string"
+      ? masterProfile.photoStoragePath
+      : null;
+  if (photoPath) {
+    try {
+      const { data: photoData, error: photoErr } = await supabase.storage
+        .from("user-photos")
+        .download(photoPath);
+      if (photoErr) {
+        console.warn("[generate] Photo download error:", photoErr.message);
+      }
+      if (photoData) {
+        const buf = Buffer.from(await photoData.arrayBuffer());
+        console.log(`[generate] Photo loaded: ${buf.length} bytes from ${photoPath}`);
+        latexImages = { "cv-photo.png": buf };
+      }
+    } catch (e) {
+      console.warn("[generate] Photo fetch failed:", e instanceof Error ? e.message : e);
+    }
+  } else {
+    console.log("[generate] No photoStoragePath in profile, keys:", Object.keys(masterProfile));
+  }
+
   const cvCompiled =
-    cvLatex.length > 0 ? tryCompileLatexToPdf(cvLatex, "cv") : null;
+    cvLatex.length > 0 ? tryCompileLatexToPdf(cvLatex, "cv", latexImages) : null;
   const cvPdfBytes = cvCompiled
     ? cvCompiled.pdf
     : await textToPdfBytes({
@@ -116,7 +142,7 @@ export async function runApplicationGenerate(params: {
 
   const coverCompiled =
     coverLatex.length > 0
-      ? tryCompileLatexToPdf(coverLatex, "cover")
+      ? tryCompileLatexToPdf(coverLatex, "cover", latexImages)
       : null;
   const coverPdfBytes = coverCompiled
     ? coverCompiled.pdf
@@ -157,7 +183,7 @@ export async function runApplicationGenerate(params: {
   }
 
   const metaBase = {
-    model: process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash-lite",
+    model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5",
     locale: app.locale,
   };
 
