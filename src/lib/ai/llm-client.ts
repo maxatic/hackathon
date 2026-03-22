@@ -2,9 +2,15 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const DEFAULT_MODEL = "claude-haiku-4-5";
 
+/** Anthropic removes old model ids; env files often still reference them. */
+const LEGACY_MODEL_ALIASES: Record<string, string> = {
+  "claude-3-5-haiku-20241022": "claude-haiku-4-5",
+};
+
 /** Model id stored in generated_documents.meta and used for logging. */
 export function getResolvedModelName(): string {
-  return process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
+  const raw = process.env.ANTHROPIC_MODEL ?? DEFAULT_MODEL;
+  return LEGACY_MODEL_ALIASES[raw] ?? raw;
 }
 
 function extractJsonText(raw: string): string {
@@ -104,6 +110,48 @@ export async function generateJsonFromPdf(
           ],
         },
       ],
+    });
+  } catch (err: unknown) {
+    throw anthropicError(err, model);
+  }
+  return extractJsonText(anthropicMessageText(msg));
+}
+
+export type ChatTurn = { role: "user" | "assistant"; content: string };
+
+export type GenerateJsonFromMessagesOptions = {
+  temperature: number;
+  /** Defaults to 4096 */
+  max_tokens?: number;
+  system: string;
+};
+
+/**
+ * Multi-turn user/assistant messages → model text (expected to be JSON).
+ * Uses the same model as `getResolvedModelName()` (Haiku by default).
+ */
+export async function generateJsonFromMessages(
+  messages: ChatTurn[],
+  options: GenerateJsonFromMessagesOptions,
+): Promise<string> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing ANTHROPIC_API_KEY");
+  }
+  const model = getResolvedModelName();
+  const client = new Anthropic({ apiKey });
+  const max_tokens = options.max_tokens ?? 4096;
+  let msg: Anthropic.Messages.Message;
+  try {
+    msg = await client.messages.create({
+      model,
+      max_tokens,
+      temperature: options.temperature,
+      system: options.system,
+      messages: messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
     });
   } catch (err: unknown) {
     throw anthropicError(err, model);
