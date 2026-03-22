@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateDocuments } from "@/lib/ai/generate-documents";
+import { getResolvedModelName } from "@/lib/ai/llm-client";
 import { MASTER_CV_COMPANY } from "@/lib/generation/master-application";
 import { tryCompileLatexToPdf } from "@/lib/pdf/latex-to-pdf";
 import { textToPdfBytes } from "@/lib/pdf/text-to-pdf";
@@ -183,7 +184,7 @@ export async function runApplicationGenerate(params: {
   }
 
   const metaBase = {
-    model: process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5",
+    model: getResolvedModelName(),
     locale: app.locale,
   };
 

@@ -37,6 +37,16 @@
   --sidebar-accent-foreground: #171717;
   --sidebar-primary-foreground: #fafafa;
   --nav-active-bg: #f0f0f0;
+
+  /* Aurora background (used by components/ui/aurora-background.tsx) */
+  --white: #ffffff;
+  --black: #000000;
+  --transparent: transparent;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --indigo-300: #a5b4fc;
+  --violet-200: #ddd6fe;
 }
 
 @theme inline {
@@ -78,6 +88,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --animate-ticker: ticker 30s linear infinite;
   --animate-shiny-text: shiny-text 8s infinite;
+  --animate-aurora: aurora 60s linear infinite;
 }
 
 @layer base {
@@ -89,6 +100,17 @@
 body {
   background: var(--bg);
   color: var(--fg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Landing #anchor targets: clear fixed nav (h-14) */
+section[id] {
+  scroll-margin-top: 3.5rem;
 }
 
 .grid-pattern {
@@ -106,4 +128,13 @@ body {
 @keyframes shiny-text {
   0%, 90%, 100% { background-position: calc(-100% - var(--shiny-width)) 0; }
   30%, 60%      { background-position: calc(100% + var(--shiny-width)) 0; }
+}
+
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
 }

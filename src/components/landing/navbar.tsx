@@ -37,12 +37,12 @@ export function Navbar() {
         <ul className="hidden md:flex items-center gap-6">
           {links.map((l) => (
             <li key={l}>
-              <Link
+              <a
                 href={`#${l.toLowerCase().replace(/\s+/g, '-')}`}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {l}
-              </Link>
+              </a>
             </li>
           ))}
         </ul>
@@ -88,14 +88,14 @@ export function Navbar() {
       {open && (
         <div className="md:hidden border-t border-border bg-background px-4 py-4 flex flex-col gap-3">
           {links.map((l) => (
-            <Link
+            <a
               key={l}
               href={`#${l.toLowerCase().replace(/\s+/g, '-')}`}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               onClick={() => setOpen(false)}
             >
               {l}
-            </Link>
+            </a>
           ))}
           <div className="flex gap-2 mt-2">
             {isSignedIn ? (

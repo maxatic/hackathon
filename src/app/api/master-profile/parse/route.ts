@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { generateJsonFromPdf } from "@/lib/ai/llm-client";
 import { requireUser } from "@/lib/auth/require-user";
 import { createAdminClient } from "@/lib/supabase/server";
 import {
@@ -36,8 +36,7 @@ export async function POST(request: Request) {
   const auth = await requireUser();
   if (auth.error) return auth.error;
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "Missing ANTHROPIC_API_KEY" },
       { status: 503 },
@@ -79,27 +78,9 @@ export async function POST(request: Request) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const base64 = Buffer.from(bytes).toString("base64");
 
-  const modelName = process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5";
-  const client = new Anthropic({ apiKey });
-
-  let message;
+  let text: string;
   try {
-    message = await client.messages.create({
-      model: modelName,
-      max_tokens: 8192,
-      system: "You are a JSON API. Return ONLY valid JSON — no markdown fences, no commentary.",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "document",
-              source: { type: "base64", media_type: "application/pdf", data: base64 },
-            },
-            { type: "text", text: buildParsePrompt() },
-          ],
-        },
-      ],
+    text = await generateJsonFromPdf(base64, buildParsePrompt(), {
       temperature: 0.1,
     });
   } catch (err: unknown) {
@@ -110,19 +91,6 @@ export async function POST(request: Request) {
       { error: `Claude error: ${raw.slice(0, 400)}` },
       { status },
     );
-  }
-
-  const textBlock = message.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    return NextResponse.json(
-      { error: "Claude returned no text content" },
-      { status: 502 },
-    );
-  }
-
-  let text = textBlock.text.trim();
-  if (text.startsWith("```")) {
-    text = text.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
   }
 
   let parsed: unknown;
@@ -161,7 +129,9 @@ export async function POST(request: Request) {
   const existingProfile = (existingRow?.profile ?? {}) as Record<string, unknown>;
   const profileToSave = {
     ...(structured as unknown as Record<string, unknown>),
-    ...(existingProfile.photoStoragePath ? { photoStoragePath: existingProfile.photoStoragePath } : {}),
+    ...(existingProfile.photoStoragePath
+      ? { photoStoragePath: existingProfile.photoStoragePath }
+      : {}),
   };
 
   const { error: dbError } = await supabase

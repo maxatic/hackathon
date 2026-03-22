@@ -1,10 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk";
 import {
   CV_STRUCTURED_SCHEMA,
   buildCvLatexFromStructured,
   buildCvPlainFromStructured,
   parseCvStructured,
 } from "@/lib/ai/cv-template";
+import { generateJsonText } from "@/lib/ai/llm-client";
 
 export type GenerateInput = {
   locale: "de" | "en";
@@ -65,43 +65,9 @@ Rules:
 export async function generateDocuments(
   input: GenerateInput,
 ): Promise<GeneratedPair> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing ANTHROPIC_API_KEY");
-  }
-
-  const modelName = process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5";
-  const client = new Anthropic({ apiKey });
-
-  let message;
-  try {
-    message = await client.messages.create({
-      model: modelName,
-      max_tokens: 8192,
-      messages: [{ role: "user", content: buildPrompt(input) }],
-      system: "You are a JSON API. Return ONLY valid JSON — no markdown fences, no commentary.",
-      temperature: 0.35,
-    });
-  } catch (err: unknown) {
-    const raw = err instanceof Error ? err.message : String(err);
-    if (raw.includes("429") || raw.includes("rate_limit")) {
-      throw new Error(
-        `Claude rate limit (${modelName}). Wait a moment and try again. Raw: ${raw.slice(0, 400)}`,
-      );
-    }
-    throw err;
-  }
-
-  const textBlock = message.content.find((b) => b.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Claude returned no text content");
-  }
-
-  let text = textBlock.text.trim();
-  // Strip markdown fences if Claude wraps the JSON
-  if (text.startsWith("```")) {
-    text = text.replace(/^```\w*\n?/, "").replace(/\n?```$/, "");
-  }
+  const text = await generateJsonText(buildPrompt(input), {
+    temperature: 0.35,
+  });
 
   let parsed: unknown;
   try {

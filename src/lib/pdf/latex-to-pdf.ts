@@ -167,7 +167,6 @@ export function tryCompileLatexToPdf(
         "[latex-to-pdf] Compile failed, using plain PDF fallback:\n",
         errors.join("\n---\n"),
       );
-      const debugPath = join(workDir, `${basename}-debug.tex`);
       try {
         const debugCopy = join(
           process.cwd(),
