@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { generateDocuments } from "@/lib/ai/generate-documents";
+import { getResolvedModelName } from "@/lib/ai/llm-client";
 import { MASTER_CV_COMPANY } from "@/lib/generation/master-application";
 import { tryCompileLatexToPdf } from "@/lib/pdf/latex-to-pdf";
 import { textToPdfBytes } from "@/lib/pdf/text-to-pdf";
@@ -83,7 +84,7 @@ export async function runApplicationGenerate(params: {
       message.includes("quota") ||
       message.includes("Quota") ||
       message.includes("rate limit");
-    const status = message.includes("Missing GOOGLE_GENERATIVE_AI_API_KEY")
+    const status = message.includes("Missing ANTHROPIC_API_KEY")
       ? 503
       : isQuota
         ? 429
@@ -157,7 +158,7 @@ export async function runApplicationGenerate(params: {
   }
 
   const metaBase = {
-    model: process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash-lite",
+    model: getResolvedModelName(),
     locale: app.locale,
   };
 

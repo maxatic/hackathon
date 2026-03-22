@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { generateJsonFromPdf } from "@/lib/ai/llm-client";
 import { requireUser } from "@/lib/auth/require-user";
 import { createAdminClient } from "@/lib/supabase/server";
 import {
@@ -36,10 +36,9 @@ export async function POST(request: Request) {
   const auth = await requireUser();
   if (auth.error) return auth.error;
 
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
-      { error: "Missing GOOGLE_GENERATIVE_AI_API_KEY" },
+      { error: "Missing ANTHROPIC_API_KEY" },
       { status: 503 },
     );
   }
@@ -79,26 +78,10 @@ export async function POST(request: Request) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const base64 = Buffer.from(bytes).toString("base64");
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const modelName = process.env.GOOGLE_AI_MODEL ?? "gemini-2.5-flash-lite";
-  const model = genAI.getGenerativeModel({ model: modelName });
-
-  let result;
+  let text: string;
   try {
-    result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { inlineData: { mimeType: "application/pdf", data: base64 } },
-            { text: buildParsePrompt() },
-          ],
-        },
-      ],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.1,
-      },
+    text = await generateJsonFromPdf(base64, buildParsePrompt(), {
+      temperature: 0.1,
     });
   } catch (err: unknown) {
     const raw = err instanceof Error ? err.message : String(err);
@@ -107,12 +90,10 @@ export async function POST(request: Request) {
         ? 429
         : 502;
     return NextResponse.json(
-      { error: `Gemini error: ${raw.slice(0, 400)}` },
+      { error: `Anthropic error: ${raw.slice(0, 400)}` },
       { status },
     );
   }
-
-  const text = result.response.text();
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);

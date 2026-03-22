@@ -5,7 +5,7 @@
 ## Features
 
 ### Master CV
-Upload or manually build a single comprehensive profile. Syz parses PDF resumes with Google Gemini and stores a structured JSON profile that feeds every tailored document you generate.
+Upload or manually build a single comprehensive profile. Syz parses PDF resumes with Claude (Anthropic) and stores a structured JSON profile that feeds every tailored document you generate.
 
 ### Tailored CV & Cover Letter Generation
 Paste a job description, pick a locale (German or English), and Syz generates an ATS-optimized CV and cover letter using your Master CV as the source of truth. Documents are compiled to PDF via LaTeX (DIN 5008 formatting) and stored in Supabase Storage for instant download.
@@ -25,7 +25,7 @@ Practice mock interviews with ElevenLabs voice-to-voice AI. Pick a topic (produc
 | Styling | Tailwind CSS 4 |
 | Database | Supabase (Postgres + Storage) |
 | Auth | Clerk |
-| AI | Google Gemini 2.5 Flash Lite |
+| AI | Anthropic Claude (default: Haiku) |
 | Voice | ElevenLabs Conversational AI |
 | PDF | LaTeX (tectonic / pdflatex), pdf-lib |
 | UI | Radix, Framer Motion, Lucide Icons |
@@ -37,7 +37,7 @@ Practice mock interviews with ElevenLabs voice-to-voice AI. Pick a topic (produc
 - Node.js 18+
 - A [Clerk](https://clerk.com) account
 - A [Supabase](https://supabase.com) project
-- A [Google AI Studio](https://aistudio.google.com) API key
+- An [Anthropic](https://console.anthropic.com) API key
 - (Optional) An [ElevenLabs](https://elevenlabs.io) agent for voice interviews
 - (Optional) `tectonic` or `pdflatex` for LaTeX PDF compilation
 
@@ -63,9 +63,9 @@ Fill in the required keys:
 | `CLERK_SECRET_KEY` | Yes | Clerk secret key |
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Yes | Google AI (Gemini) API key |
+| `ANTHROPIC_API_KEY` | Yes | Anthropic API key (Claude — CV/cover generation & PDF parsing) |
+| `ANTHROPIC_MODEL` | No | Override model (default: `claude-3-5-haiku-20241022`) |
 | `NEXT_PUBLIC_ELEVENLABS_AGENT_ID` | No | ElevenLabs agent ID for voice interviews |
-| `GOOGLE_AI_MODEL` | No | Override AI model (default: `gemini-2.5-flash-lite`) |
 | `DISABLE_LATEX_PDF` | No | Set `1` to skip LaTeX compilation |
 | `LATEX_PDF_ENGINE` | No | `tectonic` or `pdflatex` |
 
@@ -125,7 +125,7 @@ src/
 │   ├── interview/           # Voice interview UI
 │   └── ui/                  # Shared UI primitives
 ├── lib/
-│   ├── ai/                  # Gemini prompts & CV schema
+│   ├── ai/                  # Claude integration & CV schema
 │   ├── generation/          # Document generation pipeline
 │   ├── pdf/                 # LaTeX & text PDF compilation
 │   ├── supabase/            # Supabase client

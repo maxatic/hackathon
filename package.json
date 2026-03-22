@@ -9,9 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@clerk/nextjs": "^6.12.5",
     "@elevenlabs/react": "^0.14.3",
-    "@google/generative-ai": "^0.24.0",
     "@number-flow/react": "^0.6.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@supabase/supabase-js": "^2.49.1",
