@@ -3,6 +3,10 @@ import { generateDocuments } from "@/lib/ai/generate-documents";
 import { getResolvedModelName } from "@/lib/ai/llm-client";
 import { MASTER_CV_COMPANY } from "@/lib/generation/master-application";
 import { tryCompileLatexToPdf } from "@/lib/pdf/latex-to-pdf";
+import {
+  getPdfTextCharCountsByPage,
+  isSparseTwoPageCv,
+} from "@/lib/pdf/pdf-text-by-page";
 import { textToPdfBytes } from "@/lib/pdf/text-to-pdf";
 import type { ApplicationLocale, GeneratedDocument } from "@/types/database";
 
@@ -68,15 +72,17 @@ export async function runApplicationGenerate(params: {
       ? (profileRow.profile as Record<string, unknown>)
       : {};
 
+  const generateInputBase = {
+    locale: (app.locale as ApplicationLocale) ?? "de",
+    masterProfile,
+    company: app.company ?? "",
+    roleTitle: app.role_title ?? "",
+    jdText: app.jd_text ?? "",
+  } as const;
+
   let generated: Awaited<ReturnType<typeof generateDocuments>>;
   try {
-    generated = await generateDocuments({
-      locale: (app.locale as ApplicationLocale) ?? "de",
-      masterProfile,
-      company: app.company ?? "",
-      roleTitle: app.role_title ?? "",
-      jdText: app.jd_text ?? "",
-    });
+    generated = await generateDocuments(generateInputBase);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Generation failed";
     const isQuota =
@@ -103,10 +109,7 @@ export async function runApplicationGenerate(params: {
     ? "Anschreiben — Master profile (general)"
     : `Anschreiben — ${app.company || app.role_title || "Application"}`;
 
-  const cvLatex = generated.cv_latex.trim();
-  const coverLatex = generated.cover_letter_latex.trim();
-
-  // Fetch user photo from Supabase Storage if available
+  // Fetch user photo from Supabase Storage if available (before CV compile / layout retry)
   let latexImages: Record<string, Buffer> | undefined;
   const photoPath =
     typeof masterProfile.photoStoragePath === "string"
@@ -132,14 +135,71 @@ export async function runApplicationGenerate(params: {
     console.log("[generate] No photoStoragePath in profile, keys:", Object.keys(masterProfile));
   }
 
-  const cvCompiled =
+  let cvLatex = generated.cv_latex.trim();
+  let cvCompiled =
     cvLatex.length > 0 ? tryCompileLatexToPdf(cvLatex, "cv", latexImages) : null;
+
+  let cvLayoutMeta:
+    | {
+        analyzed: boolean;
+        pageCount?: number;
+        charCounts?: number[];
+        retry: boolean;
+        preRetryCharCounts?: number[];
+      }
+    | undefined;
+
+  if (cvCompiled) {
+    const firstStats = await getPdfTextCharCountsByPage(cvCompiled.pdf);
+    if (firstStats) {
+      const sparse =
+        firstStats.pageCount === 2 &&
+        isSparseTwoPageCv(firstStats.charCounts);
+      cvLayoutMeta = {
+        analyzed: true,
+        pageCount: firstStats.pageCount,
+        charCounts: firstStats.charCounts,
+        retry: false,
+      };
+      if (sparse) {
+        try {
+          generated = await generateDocuments({
+            ...generateInputBase,
+            cvLayoutHint: "compress_second_page",
+          });
+          cvLatex = generated.cv_latex.trim();
+          cvCompiled =
+            cvLatex.length > 0
+              ? tryCompileLatexToPdf(cvLatex, "cv", latexImages)
+              : null;
+          const afterStats = cvCompiled
+            ? await getPdfTextCharCountsByPage(cvCompiled.pdf)
+            : null;
+          cvLayoutMeta = {
+            analyzed: true,
+            retry: true,
+            preRetryCharCounts: firstStats.charCounts,
+            pageCount: afterStats?.pageCount ?? firstStats.pageCount,
+            charCounts: afterStats?.charCounts ?? firstStats.charCounts,
+          };
+        } catch (retryErr) {
+          console.warn(
+            "[generate] CV layout retry failed, using first generation:",
+            retryErr instanceof Error ? retryErr.message : retryErr,
+          );
+        }
+      }
+    }
+  }
+
   const cvPdfBytes = cvCompiled
     ? cvCompiled.pdf
     : await textToPdfBytes({
         title: cvTitle,
         body: generated.cv_plain,
       });
+
+  const coverLatex = generated.cover_letter_latex.trim();
 
   const coverCompiled =
     coverLatex.length > 0
@@ -202,6 +262,7 @@ export async function runApplicationGenerate(params: {
         pdf_render: cvCompiled
           ? (`latex-${cvCompiled.engine}` as const)
           : ("plaintext" as const),
+        ...(cvLayoutMeta ? { cv_layout: cvLayoutMeta } : {}),
       },
     })
     .select("*")

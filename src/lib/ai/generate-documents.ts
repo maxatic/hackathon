@@ -6,12 +6,17 @@ import {
 } from "@/lib/ai/cv-template";
 import { generateJsonText } from "@/lib/ai/llm-client";
 
+/** Internal hint after PDF analysis: second page had too little text — force a one-page CV. */
+export type CvLayoutHint = "compress_second_page";
+
 export type GenerateInput = {
   locale: "de" | "en";
   masterProfile: Record<string, unknown>;
   company: string;
   roleTitle: string;
   jdText: string;
+  /** Set by the server after a sparse two-page PDF; triggers stronger compress instructions. */
+  cvLayoutHint?: CvLayoutHint;
 };
 
 export type GeneratedPair = {
@@ -59,7 +64,15 @@ ${CV_STRUCTURED_SCHEMA},
 Rules:
 - Fill cv_structured from the master profile and tailor bullets to the job description; do not invent employers or degrees not implied by the profile.
 - Keep arrays present (use [] if a section has no items).
-- cover_letter_latex: self-contained and compilable in principle (common packages only if needed).`;
+- cover_letter_latex: self-contained and compilable in principle (common packages only if needed).
+
+CV length (fixed template — you control only how much text goes into each section):
+- Aim for EITHER one dense page OR two full pages. Avoid a second page that is only a small tail of content (a few lines or a short block); that reads poorly in PDF.
+- If the profile is light or mid-length, compress to one page: shorter summary, fewer bullets per role (often 2–3), trim older or less relevant roles/projects, tighter wording.
+- If the profile is rich and needs two pages, commit to two pages: enough bullets and detail on page 2 that the second page is substantially filled (not a sliver).
+- Do not pad with fluff; prioritize relevance to the job description.${input.cvLayoutHint === "compress_second_page" ? `
+
+CRITICAL — layout fix: The previous PDF had two pages but the second page was too sparse. Merge to ONE page: shorten bullets, reduce bullet count per role, tighten the summary, drop lowest-priority items or older roles only when still supported by the master profile. Do not invent facts.` : ""}`;
 }
 
 export async function generateDocuments(
