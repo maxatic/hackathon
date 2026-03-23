@@ -60,6 +60,28 @@ function sanitizeProfilePatch(
       }
       continue;
     }
+    if (k === "experience" || k === "education") {
+      if (Array.isArray(v)) {
+        out[k] = v
+          .map((entry: unknown) => {
+            if (typeof entry !== "object" || entry === null) return null;
+            const e = entry as Record<string, unknown>;
+            const base = {
+              dateRange: String(e.dateRange ?? ""),
+              location: String(e.location ?? ""),
+              bullets: Array.isArray(e.bullets) ? e.bullets.map(String) : [],
+            };
+            if (k === "experience") {
+              return { ...base, title: String(e.title ?? ""), organization: String(e.organization ?? "") };
+            }
+            return { ...base, institution: String(e.institution ?? ""), degree: String(e.degree ?? "") };
+          })
+          .filter(Boolean);
+      } else if (typeof v === "string") {
+        out[k] = v;
+      }
+      continue;
+    }
     if (typeof v === "string") {
       out[k] = v;
     }
@@ -183,7 +205,9 @@ Schema:
   "reply": string (markdown allowed inside the string for bullets),
   "profilePatch": optional object with only keys you want to change from: fullName, email, phone, location, summary, skills, experience, education, languages.
   - skills: string array OR comma-separated skills string.
-  - Other string fields: plain text as stored in the form (experience/education are multi-line plain text).
+  - experience: array of { title: string, dateRange: string, organization: string, location: string, bullets: string[] }.
+  - education: array of { institution: string, dateRange: string, degree: string, location: string, bullets: string[] }.
+  - Other string fields: plain text as stored in the form.
 }
 
 Current profile JSON:

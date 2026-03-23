@@ -1,11 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
+import { Reorder, AnimatePresence } from "framer-motion";
 import { MasterCvChat } from "@/components/master-cv-chat";
+import { ExperienceCard } from "@/components/experience-card";
+import { EducationCard } from "@/components/education-card";
 import {
   type ProfileFields,
+  type ExperienceEntry,
+  type EducationEntry,
   fieldsToProfile,
   mergeProfilePatch,
+  emptyExperienceEntry,
+  emptyEducationEntry,
 } from "@/lib/master-cv-fields";
 import { parseFetchJson } from "@/lib/parse-fetch-json";
 
@@ -16,8 +23,8 @@ const empty: ProfileFields = {
   location: "",
   summary: "",
   skills: "",
-  experience: "",
-  education: "",
+  experience: [],
+  education: [],
   languages: "",
 };
 
@@ -26,6 +33,41 @@ function profileToFields(p: Record<string, unknown>): ProfileFields {
   if ("header" in p && typeof p.header === "object" && p.header !== null) {
     return structuredToFields(p);
   }
+
+  let experience: ExperienceEntry[];
+  if (Array.isArray(p.experience)) {
+    experience = (p.experience as Record<string, unknown>[]).map((e) => ({
+      id: crypto.randomUUID(),
+      title: String(e.title ?? ""),
+      dateRange: String(e.dateRange ?? ""),
+      organization: String(e.organization ?? ""),
+      location: String(e.location ?? ""),
+      bullets: Array.isArray(e.bullets) ? e.bullets.map(String) : [],
+    }));
+  } else {
+    const text = String(p.experience ?? "").trim();
+    experience = text
+      ? [{ id: crypto.randomUUID(), title: "", dateRange: "", organization: "", location: "", bullets: [text] }]
+      : [];
+  }
+
+  let education: EducationEntry[];
+  if (Array.isArray(p.education)) {
+    education = (p.education as Record<string, unknown>[]).map((e) => ({
+      id: crypto.randomUUID(),
+      institution: String(e.institution ?? ""),
+      dateRange: String(e.dateRange ?? ""),
+      degree: String(e.degree ?? ""),
+      location: String(e.location ?? ""),
+      bullets: Array.isArray(e.bullets) ? e.bullets.map(String) : [],
+    }));
+  } else {
+    const text = String(p.education ?? "").trim();
+    education = text
+      ? [{ id: crypto.randomUUID(), institution: "", dateRange: "", degree: "", location: "", bullets: [text] }]
+      : [];
+  }
+
   return {
     fullName: String(p.fullName ?? ""),
     email: String(p.email ?? ""),
@@ -33,34 +75,36 @@ function profileToFields(p: Record<string, unknown>): ProfileFields {
     location: String(p.location ?? ""),
     summary: String(p.summary ?? ""),
     skills: Array.isArray(p.skills) ? (p.skills as string[]).join(", ") : String(p.skills ?? ""),
-    experience: String(p.experience ?? ""),
-    education: String(p.education ?? ""),
+    experience,
+    education,
     languages: String(p.languages ?? ""),
   };
 }
 
-/** Convert `CvStructuredContent`-shaped profile into flat form fields. */
+/** Convert `CvStructuredContent`-shaped profile into form fields. */
 function structuredToFields(p: Record<string, unknown>): ProfileFields {
   const h = (p.header ?? {}) as Record<string, unknown>;
   const addressLines = Array.isArray(h.addressLines) ? (h.addressLines as string[]) : [];
 
   const expArr = Array.isArray(p.experience) ? (p.experience as Record<string, unknown>[]) : [];
-  const experience = expArr
-    .map((e) => {
-      const bullets = Array.isArray(e.bullets) ? (e.bullets as string[]) : [];
-      const bulletStr = bullets.map((b) => `  - ${b}`).join("\n");
-      return `${e.title ?? ""} | ${e.dateRange ?? ""}\n${e.organization ?? ""} | ${e.location ?? ""}${bulletStr ? "\n" + bulletStr : ""}`;
-    })
-    .join("\n\n");
+  const experience: ExperienceEntry[] = expArr.map((e) => ({
+    id: crypto.randomUUID(),
+    title: String(e.title ?? ""),
+    dateRange: String(e.dateRange ?? ""),
+    organization: String(e.organization ?? ""),
+    location: String(e.location ?? ""),
+    bullets: Array.isArray(e.bullets) ? (e.bullets as string[]) : [],
+  }));
 
   const eduArr = Array.isArray(p.education) ? (p.education as Record<string, unknown>[]) : [];
-  const education = eduArr
-    .map((e) => {
-      const bullets = Array.isArray(e.bullets) ? (e.bullets as string[]) : [];
-      const bulletStr = bullets.map((b) => `  - ${b}`).join("\n");
-      return `${e.institution ?? ""} | ${e.dateRange ?? ""}\n${e.degree ?? ""} | ${e.location ?? ""}${bulletStr ? "\n" + bulletStr : ""}`;
-    })
-    .join("\n\n");
+  const education: EducationEntry[] = eduArr.map((e) => ({
+    id: crypto.randomUUID(),
+    institution: String(e.institution ?? ""),
+    dateRange: String(e.dateRange ?? ""),
+    degree: String(e.degree ?? ""),
+    location: String(e.location ?? ""),
+    bullets: Array.isArray(e.bullets) ? (e.bullets as string[]) : [],
+  }));
 
   const sk = (p.skills ?? {}) as Record<string, unknown>;
   const skillParts: string[] = [];
@@ -326,8 +370,54 @@ export function MasterCvEditor() {
     }
   }
 
-  function set<K extends keyof ProfileFields>(key: K, value: string) {
+  function set(key: "fullName" | "email" | "phone" | "location" | "summary" | "skills" | "languages", value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Experience CRUD + reorder
+  function updateExperience(id: string, updated: ExperienceEntry) {
+    setFields((prev) => ({
+      ...prev,
+      experience: prev.experience.map((e) => (e.id === id ? updated : e)),
+    }));
+  }
+  function removeExperience(id: string) {
+    setFields((prev) => ({
+      ...prev,
+      experience: prev.experience.filter((e) => e.id !== id),
+    }));
+  }
+  function addExperience() {
+    setFields((prev) => ({
+      ...prev,
+      experience: [...prev.experience, emptyExperienceEntry()],
+    }));
+  }
+  function reorderExperience(newOrder: ExperienceEntry[]) {
+    setFields((prev) => ({ ...prev, experience: newOrder }));
+  }
+
+  // Education CRUD + reorder
+  function updateEducation(id: string, updated: EducationEntry) {
+    setFields((prev) => ({
+      ...prev,
+      education: prev.education.map((e) => (e.id === id ? updated : e)),
+    }));
+  }
+  function removeEducation(id: string) {
+    setFields((prev) => ({
+      ...prev,
+      education: prev.education.filter((e) => e.id !== id),
+    }));
+  }
+  function addEducation() {
+    setFields((prev) => ({
+      ...prev,
+      education: [...prev.education, emptyEducationEntry()],
+    }));
+  }
+  function reorderEducation(newOrder: EducationEntry[]) {
+    setFields((prev) => ({ ...prev, education: newOrder }));
   }
 
   if (loading) {
@@ -632,25 +722,91 @@ export function MasterCvEditor() {
         <span className="mt-1 block text-xs text-[var(--muted)]">Comma-separated</span>
       </label>
 
-      <label className="block text-sm">
-        <span className="font-medium text-[var(--fg)]">Experience</span>
-        <textarea
-          className={`${inputClass} min-h-[120px] resize-y`}
-          value={fields.experience}
-          onChange={(e) => set("experience", e.target.value)}
-          placeholder="Company, role, dates, bullets — plain text is fine."
-        />
-      </label>
+      {/* Experience — structured cards with drag-and-drop */}
+      <div className="space-y-3">
+        <span className="block text-sm font-medium text-[var(--fg)]">Experience</span>
+        {fields.experience.length > 0 ? (
+          <Reorder.Group
+            axis="y"
+            values={fields.experience}
+            onReorder={reorderExperience}
+            className="space-y-3"
+            as="div"
+          >
+            <AnimatePresence initial={false}>
+              {fields.experience.map((entry) => (
+                <Reorder.Item
+                  key={entry.id}
+                  value={entry}
+                  as="div"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ExperienceCard
+                    entry={entry}
+                    onChange={(updated) => updateExperience(entry.id, updated)}
+                    onRemove={() => removeExperience(entry.id)}
+                  />
+                </Reorder.Item>
+              ))}
+            </AnimatePresence>
+          </Reorder.Group>
+        ) : (
+          <p className="text-xs text-[var(--muted)]">No experience entries yet.</p>
+        )}
+        <button
+          type="button"
+          onClick={addExperience}
+          className="w-full rounded-lg border border-dashed border-[var(--border)] px-4 py-3 text-sm text-[var(--muted)] transition-colors hover:border-[var(--fg)] hover:text-[var(--fg)]"
+        >
+          + Add experience
+        </button>
+      </div>
 
-      <label className="block text-sm">
-        <span className="font-medium text-[var(--fg)]">Education</span>
-        <textarea
-          className={`${inputClass} min-h-[80px] resize-y`}
-          value={fields.education}
-          onChange={(e) => set("education", e.target.value)}
-          placeholder="Degree, institution, year"
-        />
-      </label>
+      {/* Education — structured cards with drag-and-drop */}
+      <div className="space-y-3">
+        <span className="block text-sm font-medium text-[var(--fg)]">Education</span>
+        {fields.education.length > 0 ? (
+          <Reorder.Group
+            axis="y"
+            values={fields.education}
+            onReorder={reorderEducation}
+            className="space-y-3"
+            as="div"
+          >
+            <AnimatePresence initial={false}>
+              {fields.education.map((entry) => (
+                <Reorder.Item
+                  key={entry.id}
+                  value={entry}
+                  as="div"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <EducationCard
+                    entry={entry}
+                    onChange={(updated) => updateEducation(entry.id, updated)}
+                    onRemove={() => removeEducation(entry.id)}
+                  />
+                </Reorder.Item>
+              ))}
+            </AnimatePresence>
+          </Reorder.Group>
+        ) : (
+          <p className="text-xs text-[var(--muted)]">No education entries yet.</p>
+        )}
+        <button
+          type="button"
+          onClick={addEducation}
+          className="w-full rounded-lg border border-dashed border-[var(--border)] px-4 py-3 text-sm text-[var(--muted)] transition-colors hover:border-[var(--fg)] hover:text-[var(--fg)]"
+        >
+          + Add education
+        </button>
+      </div>
 
       <label className="block text-sm">
         <span className="font-medium text-[var(--fg)]">Languages</span>
